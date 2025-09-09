@@ -1,0 +1,1 @@
+# TrailerMeta Django app for MediaCMS extensions

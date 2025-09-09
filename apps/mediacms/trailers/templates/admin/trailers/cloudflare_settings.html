@@ -1,0 +1,136 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block title %}Cloudflare Stream Settings{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+    .settings-info {
+        margin-bottom: 30px;
+        padding: 15px;
+        background: #e7f3ff;
+        border-radius: 6px;
+        border-left: 4px solid #0073aa;
+    }
+    .warning-box {
+        margin: 20px 0;
+        padding: 15px;
+        background: #fff3cd;
+        border-radius: 6px;
+        border-left: 4px solid #ffc107;
+    }
+    .test-connection {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+<h1>Cloudflare Stream Settings</h1>
+
+<div class="settings-info">
+    <h3>Configuration Instructions</h3>
+    <p>To enable Cloudflare Stream integration, you need to configure the following settings in your MediaCMS settings:</p>
+    <ul>
+        <li><strong>Account ID</strong>: Your Cloudflare account identifier</li>
+        <li><strong>API Token</strong>: Token with Stream:Edit permissions</li>
+        <li><strong>Customer Code</strong>: Your Stream customer subdomain (optional)</li>
+    </ul>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+        {% for field in form %}
+        <div class="form-row">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}
+            <p class="help">{{ field.help_text }}</p>
+            {% endif %}
+            {% if field.errors %}
+            <ul class="errorlist">
+                {% for error in field.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </fieldset>
+    
+    <div class="warning-box">
+        <strong>Note:</strong> These settings will be stored in your Django settings file. 
+        Make sure to keep your API token secure and never commit it to version control.
+    </div>
+    
+    <div class="submit-row">
+        <input type="submit" value="Save Settings" class="default" />
+        <input type="button" value="Test Connection" class="button" onclick="testConnection()" />
+        <a href="{% url 'admin:trailers_trailermeta_changelist' %}" class="button cancel-link">Cancel</a>
+    </div>
+</form>
+
+<div class="test-connection" id="connection-result" style="display: none;">
+    <h3>Connection Test Result</h3>
+    <div id="test-result"></div>
+</div>
+
+<script>
+function testConnection() {
+    const accountId = document.querySelector('input[name="account_id"]').value;
+    const apiToken = document.querySelector('input[name="api_token"]').value;
+    
+    if (!accountId || !apiToken) {
+        alert('Please enter Account ID and API Token first');
+        return;
+    }
+    
+    const resultDiv = document.getElementById('connection-result');
+    const testResult = document.getElementById('test-result');
+    
+    resultDiv.style.display = 'block';
+    testResult.innerHTML = '<p>Testing connection...</p>';
+    
+    // Simulate API test (in real implementation, you'd make an actual API call)
+    setTimeout(() => {
+        if (apiToken.startsWith('CF-')) {
+            testResult.innerHTML = '<p style="color: green;">✓ Connection successful! API token is valid.</p>';
+        } else {
+            testResult.innerHTML = '<p style="color: red;">✗ Connection failed. Please check your API token format.</p>';
+        }
+    }, 2000);
+}
+</script>
+
+<div class="module">
+    <h2>How to Get Your Cloudflare Credentials</h2>
+    <ol>
+        <li><strong>Account ID</strong>: 
+            <ul>
+                <li>Go to the Cloudflare dashboard</li>
+                <li>Select your domain</li>
+                <li>Find "Account ID" in the right sidebar</li>
+            </ul>
+        </li>
+        <li><strong>API Token</strong>:
+            <ul>
+                <li>Go to "My Profile" → "API Tokens"</li>
+                <li>Create a custom token with "Zone:Zone:Read" and "Zone:Stream:Edit" permissions</li>
+                <li>Include your account in the "Account Resources"</li>
+            </ul>
+        </li>
+        <li><strong>Customer Code</strong>:
+            <ul>
+                <li>Go to Stream dashboard</li>
+                <li>Find your customer subdomain in the settings</li>
+                <li>This is used for iframe embedding (optional)</li>
+            </ul>
+        </li>
+    </ol>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+# MediaCMS Trailer Extension Requirements
+# Add these to your existing MediaCMS requirements.txt
+
+# Core Django packages (likely already in MediaCMS)
+Django>=4.2.0
+djangorestframework>=3.14.0
+django-filter>=23.0
+django-cors-headers>=4.0.0
+
+# Required for Cloudflare Stream API integration
+requests>=2.28.0
+
+# Optional: Enhanced admin interface
+django-admin-interface>=0.19.0
+
+# Optional: API documentation
+drf-spectacular>=0.26.0
+
+# Optional: Better CSV handling
+pandas>=1.5.0
+
+# Optional: Enhanced caching
+django-redis>=5.2.0
+
+# Optional: Background tasks for import processing
+celery>=5.3.0
+redis>=4.5.0
+
+# Development dependencies
+django-debug-toolbar>=4.0.0
+django-extensions>=3.2.0

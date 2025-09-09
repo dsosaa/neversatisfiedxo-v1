@@ -1,0 +1,138 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block title %}Video Status Check{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+    .status-result {
+        margin-top: 20px;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .status-success {
+        border-left: 4px solid #28a745;
+    }
+    .status-error {
+        border-left: 4px solid #dc3545;
+    }
+    .status-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    .info-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
+        text-align: center;
+    }
+    .info-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+    }
+    .info-value {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+    }
+    .thumbnail-preview {
+        margin-top: 20px;
+        text-align: center;
+    }
+    .thumbnail-preview img {
+        max-width: 300px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+<h1>Video Status Check</h1>
+
+<div class="description">
+    <p>Check the processing status of a video in Cloudflare Stream by entering its UID.</p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+        {% for field in form %}
+        <div class="form-row">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}
+            <p class="help">{{ field.help_text }}</p>
+            {% endif %}
+            {% if field.errors %}
+            <ul class="errorlist">
+                {% for error in field.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </fieldset>
+    
+    <div class="submit-row">
+        <input type="submit" value="Check Status" class="default" />
+        <a href="{% url 'admin:trailers_trailermeta_changelist' %}" class="button cancel-link">Back to List</a>
+    </div>
+</form>
+
+{% if video_uid and status_result %}
+<div class="status-result {% if status_result.success %}status-success{% else %}status-error{% endif %}">
+    <h2>Status for Video: {{ video_uid }}</h2>
+    
+    {% if status_result.success %}
+    <div class="status-info">
+        <div class="info-item">
+            <div class="info-label">Status</div>
+            <div class="info-value">{{ status_result.status|title }}</div>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-label">Ready to Stream</div>
+            <div class="info-value">{% if status_result.ready %}✓ Yes{% else %}✗ No{% endif %}</div>
+        </div>
+        
+        {% if status_result.duration %}
+        <div class="info-item">
+            <div class="info-label">Duration</div>
+            <div class="info-value">{{ status_result.duration|floatformat:1 }}s</div>
+        </div>
+        {% endif %}
+        
+        {% if status_result.size %}
+        <div class="info-item">
+            <div class="info-label">File Size</div>
+            <div class="info-value">{{ status_result.size|filesizeformat }}</div>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if status_result.ready %}
+    <div class="thumbnail-preview">
+        <h3>Video Thumbnail</h3>
+        <img src="https://videodelivery.net/{{ video_uid }}/thumbnails/thumbnail.jpg" alt="Video thumbnail" />
+        <p><a href="https://iframe.videodelivery.net/{{ video_uid }}" target="_blank">→ Preview Video</a></p>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="error">
+        <strong>Error:</strong> {{ status_result.error }}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
