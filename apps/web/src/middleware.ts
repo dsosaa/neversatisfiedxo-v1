@@ -45,7 +45,7 @@ function generateCSPHeader(nonce: string, request: NextRequest): string {
     object-src 'none';
   ` : `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'unsafe-eval' ${origin} https://videos.neversatisfiedxo.com https://challenges.cloudflare.com;
+    script-src 'self' 'nonce-${nonce}' 'unsafe-inline' 'unsafe-eval' ${origin} https://videos.neversatisfiedxo.com https://challenges.cloudflare.com;
     style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' data: https://videodelivery.net https://imagedelivery.net https://*.cloudflarestream.com blob:;
