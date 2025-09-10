@@ -133,30 +133,115 @@ deploy_application() {
     
     cd "$APP_DIR"
     
-    # Stop existing containers
-    log_info "Stopping existing containers..."
-    docker compose --profile production down || true
+    # Create backup of current deployment
+    log_info "Creating backup of current deployment..."
+    if docker compose --profile production ps | grep -q "Up"; then
+        docker compose --profile production exec web npm run build:production || log_warn "Backup build failed"
+        docker tag v0_trailer_web:latest v0_trailer_web:backup-$(date +%Y%m%d-%H%M%S) || true
+    fi
     
-    # Pull latest images
+    # Stop existing containers gracefully
+    log_info "Stopping existing containers gracefully..."
+    docker compose --profile production down --timeout 30 || {
+        log_error "Failed to stop containers gracefully, forcing stop..."
+        docker compose --profile production kill || true
+        docker compose --profile production rm -f || true
+    }
+    
+    # Pull latest images with retry
     log_info "Pulling latest Docker images..."
-    docker compose --profile production pull
+    for i in {1..3}; do
+        if docker compose --profile production pull; then
+            break
+        else
+            log_warn "Pull attempt $i failed, retrying..."
+            sleep 10
+        fi
+    done
     
-    # Build application
+    # Build application with error handling
     log_info "Building application..."
-    docker compose --profile production build --no-cache
+    if ! docker compose --profile production build --no-cache; then
+        log_error "Build failed! Attempting rollback..."
+        rollback_deployment
+        return 1
+    fi
     
-    # Start services
+    # Start services with health check validation
     log_info "Starting production services..."
-    docker compose --profile production up -d
+    if ! docker compose --profile production up -d; then
+        log_error "Failed to start services! Attempting rollback..."
+        rollback_deployment
+        return 1
+    fi
     
-    # Wait for services to be ready
+    # Wait for services to be ready with timeout
     log_info "Waiting for services to start..."
-    sleep 30
+    local wait_time=0
+    local max_wait=300  # 5 minutes
     
-    # Check service health
-    check_services_health
+    while [ $wait_time -lt $max_wait ]; do
+        if docker compose --profile production ps | grep -q "healthy"; then
+            log_info "Services are healthy after ${wait_time}s"
+            break
+        fi
+        
+        if [ $wait_time -gt 120 ]; then
+            log_warn "Services taking longer than expected to start (${wait_time}s)..."
+        fi
+        
+        sleep 10
+        wait_time=$((wait_time + 10))
+    done
     
-    log_info "✓ Application deployed successfully"
+    if [ $wait_time -ge $max_wait ]; then
+        log_error "Services failed to start within timeout! Attempting rollback..."
+        rollback_deployment
+        return 1
+    fi
+    
+    # Check service health with retry
+    log_info "Validating service health..."
+    for i in {1..5}; do
+        if check_services_health; then
+            log_info "✓ Application deployed successfully"
+            return 0
+        else
+            log_warn "Health check attempt $i failed, retrying in 30s..."
+            sleep 30
+        fi
+    done
+    
+    log_error "Health checks failed after multiple attempts! Attempting rollback..."
+    rollback_deployment
+    return 1
+}
+
+# Rollback deployment to previous version
+rollback_deployment() {
+    log_step "Rolling back deployment..."
+    
+    # Stop current failing deployment
+    docker compose --profile production down --timeout 10 || true
+    
+    # Find latest backup image
+    local backup_image=$(docker images --filter "reference=v0_trailer_web:backup-*" --format "table {{.Repository}}:{{.Tag}}" | tail -n +2 | head -n 1)
+    
+    if [[ -n "$backup_image" ]]; then
+        log_info "Rolling back to: $backup_image"
+        docker tag "$backup_image" v0_trailer_web:latest
+        docker compose --profile production up -d
+        
+        # Wait for rollback to be ready
+        sleep 30
+        if check_services_health; then
+            log_info "✓ Rollback successful"
+        else
+            log_error "✗ Rollback failed - manual intervention required"
+        fi
+    else
+        log_error "No backup image found - manual intervention required"
+    fi
 }
 
 # Check services health
@@ -165,6 +250,7 @@ check_services_health() {
     
     local max_attempts=30
     local attempt=0
+    local all_healthy=true
     
     # Check if containers are running
     while [[ $attempt -lt $max_attempts ]]; do
@@ -176,29 +262,51 @@ check_services_health() {
         attempt=$((attempt + 1))
         log_info "Waiting for containers... ($attempt/$max_attempts)"
         sleep 5
+        
+        if [[ $attempt -eq $max_attempts ]]; then
+            log_error "Containers failed to start"
+            return 1
+        fi
     done
     
-    # Check specific service endpoints
+    # Check specific service endpoints with timeout
     log_info "Checking service endpoints..."
     
-    # Check Next.js frontend
-    if curl -f http://localhost:3000/health &>/dev/null; then
+    # Check Next.js frontend (both endpoints)
+    if timeout 10 curl -f http://localhost:3000/health &>/dev/null || timeout 10 curl -f http://localhost:3000/api/health &>/dev/null; then
         log_info "✓ Frontend service is healthy"
     else
         log_warn "Frontend service health check failed"
+        all_healthy=false
     fi
     
-    # Check Django backend
-    if curl -f http://localhost:8000/api/health &>/dev/null; then
+    # Check Django backend (MediaCMS API)
+    if timeout 10 curl -f http://localhost:8000/api/v1/ &>/dev/null; then
         log_info "✓ Backend service is healthy"
     else
         log_warn "Backend service health check failed"
+        all_healthy=false
+    fi
+    
+    # Check database connectivity through backend
+    if timeout 10 curl -f http://localhost:8000/admin/ &>/dev/null; then
+        log_info "✓ Database connectivity is healthy"
+    else
+        log_warn "Database connectivity check failed"
+        all_healthy=false
     fi
     
     # Show container status
     echo
     log_info "Container status:"
     docker compose --profile production ps
+    
+    # Return appropriate exit code
+    if [[ "$all_healthy" == "true" ]]; then
+        return 0
+    else
+        return 1
+    fi
 }
 
 # Setup database and initial data
@@ -237,6 +345,7 @@ update_nginx_config() {
     # Update server_name in Nginx config
     if [[ -f "/etc/nginx/sites-available/neversatisfiedxo" ]]; then
         sed -i "s/server_name _;/server_name $domain www.$domain;/" /etc/nginx/sites-available/neversatisfiedxo
+        sed -i "s/server_name localhost;/server_name $domain www.$domain;/" /etc/nginx/sites-available/neversatisfiedxo
         
         # Test configuration
         if nginx -t; then

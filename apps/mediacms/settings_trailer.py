@@ -43,7 +43,8 @@ REST_FRAMEWORK = {
 # CORS settings for frontend
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Next.js dev server
-    "https://your-domain.com",  # Your production domain
+    "https://videos.neversatisfiedxo.com",  # Production domain
+    "https://www.videos.neversatisfiedxo.com",  # Production domain with www
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -61,9 +62,9 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # Cloudflare Stream settings
-CLOUDFLARE_STREAM_CUSTOMER_CODE = "your_customer_code"
-CLOUDFLARE_ACCOUNT_ID = "your_account_id"
-CLOUDFLARE_STREAM_API_TOKEN = "your_api_token"
+CLOUDFLARE_STREAM_CUSTOMER_CODE = "d6a71f77965f2f32d7f3ebb03869b8d6"
+CLOUDFLARE_ACCOUNT_ID = "d6a71f77965f2f32d7f3ebb03869b8d6"
+CLOUDFLARE_STREAM_API_TOKEN = "rvWXyGVnRtQkQm_JXdhlJNcOjU-OC1yMSqmdw-xz"
 
 # Trailer-specific settings
 TRAILER_SETTINGS = {
@@ -80,16 +81,20 @@ TRAILER_SETTINGS = {
 FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
 
-# Cache settings for API responses
+# Cache settings for API responses (Production Redis)
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "unique-snowflake",
-        "TIMEOUT": 300,  # 5 minutes
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/1",
         "OPTIONS": {
-            "MAX_ENTRIES": 1000,
-            "CULL_FREQUENCY": 3,
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "retry_on_timeout": True,
+                "password": None,  # Will be set via environment variable
+            },
         },
+        "TIMEOUT": 300,  # 5 minutes
+        "KEY_PREFIX": "trailers",
     }
 }
 
