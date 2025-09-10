@@ -10,7 +10,7 @@ services:
     container_name: v0_trailer_web
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3002:3000"
     environment:
       # Required environment variables
       - NEXT_PUBLIC_SITE_NAME=${NEXT_PUBLIC_SITE_NAME:-neversatisfiedxo}
@@ -116,8 +116,7 @@ services:
     container_name: v0_trailer_nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
     volumes:
       - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./config/ssl:/etc/nginx/ssl:ro
