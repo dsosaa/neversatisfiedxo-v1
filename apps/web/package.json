@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack --port 3002",
     "dev:secure": "NODE_ENV=development next dev --turbopack --port 3002",
     "build": "npm run security:check && npm run type-check && next build --turbopack",
+    "build:production": "npm run type-check && next build --turbopack",
     "build:analyze": "ANALYZE=true next build --turbopack",
     "build:ci": "NODE_ENV=production npm run security:check && npm run lint && npm run type-check && next build --turbopack",
     "start": "next start",
