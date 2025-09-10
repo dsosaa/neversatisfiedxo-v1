@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { GalleryProvider } from '@/components/gallery-provider'
+import { type Trailer } from '@/lib/types'
 import fs from 'fs'
 import path from 'path'
 import Papa from 'papaparse'
@@ -46,7 +47,7 @@ function loadTrailerDataDirect() {
       skipEmptyLines: true,
     })
     
-    const trailers: any[] = []
+    const trailers: Trailer[] = []
     const data = parseResult.data as Record<string, unknown>[]
     
     data.forEach((row: Record<string, unknown>, index: number) => {
@@ -93,13 +94,13 @@ function loadTrailerDataDirect() {
         length: lengthStr,
         length_minutes: lengthMinutes,
         creators: String(row['Creators'] || ''),
-        upload_status: String(row['Upload Status'] || 'Complete'),
+        upload_status: (String(row['Upload Status'] || 'Complete') as 'Complete' | 'Pending' | 'Processing'),
         is_featured: false,
         is_premium: priceNumeric > 0,
         created_at: new Date().toISOString(),
       }
       
-      trailers.push(trailer)
+      trailers.push(trailer as Trailer)
     })
     
     return {

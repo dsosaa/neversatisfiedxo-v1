@@ -169,7 +169,7 @@ async function isValidAuthentication(authCookie: { value?: string } | undefined)
     }
     
     return sessionData.value === 'authenticated'
-  } catch (jsonError) {
+  } catch {
     // If JSON parsing fails, try JWT token verification using Web Crypto API
     try {
       // JWT verification logic using Web Crypto API (Edge Runtime compatible)
@@ -222,7 +222,7 @@ async function isValidAuthentication(authCookie: { value?: string } | undefined)
       }
 
       return payload.sub === 'authenticated'
-    } catch (jwtError) {
+    } catch {
       return false
     }
   }
