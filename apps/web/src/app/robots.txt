@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /
+
+# Private gallery - block all crawlers
+Disallow: /api/
+Disallow: /enter
+Disallow: /video/
+
+# Block access to authentication endpoints
+Disallow: /api/gate
