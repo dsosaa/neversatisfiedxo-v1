@@ -3,23 +3,17 @@ URL configuration extension for MediaCMS with trailer functionality
 Add this to your main MediaCMS urls.py file
 """
 
-from django.contrib import admin
-from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    
-    # MediaCMS existing URLs
-    # path('', include('files.urls')),  # Existing MediaCMS URLs
-    # path('api/', include('api.urls')),  # Existing MediaCMS API
-    
-    # Trailer app URLs
-    path('', include('trailers.urls')),  # Trailer API endpoints
-    
+    path("admin/", admin.site.urls),
+    # Trailer app URLs - must come before MediaCMS URLs to avoid conflicts
+    path("", include("trailers.urls")),  # Trailer API endpoints
     # REST Framework authentication URLs
-    path('api-auth/', include('rest_framework.urls')),
+    path("api-auth/", include("rest_framework.urls")),
 ]
 
 # Serve media files in development

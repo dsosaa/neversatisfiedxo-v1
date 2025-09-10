@@ -1,6 +1,6 @@
-# 📚 Documentation Index
+# 📚 Documentation Index - v2.0 Enterprise Edition
 
-Welcome to the neversatisfiedxo Premium Trailer Gallery documentation. This guide will help you navigate through all aspects of the project from setup to production deployment.
+Welcome to the neversatisfiedxo Premium Trailer Gallery v2.0 documentation. This comprehensive guide covers all aspects of our enterprise-grade streaming platform from initial setup to production deployment with security hardening and performance optimization.
 
 ## 🚀 Quick Start
 
@@ -13,7 +13,7 @@ Welcome to the neversatisfiedxo Premium Trailer Gallery documentation. This guid
 
 ### 🔧 Setup & Configuration
 - **Installation Guide** - Coming soon
-- **Environment Configuration** - See [CLAUDE.md](./development/CLAUDE.md#environment-configuration)
+- **Environment Configuration** - See [CLAUDE.md](../CLAUDE.md#environment-configuration)
 - **Database Setup** - Coming soon
 
 ### 💻 Development
@@ -54,7 +54,7 @@ Welcome to the neversatisfiedxo Premium Trailer Gallery documentation. This guid
 ## 🔍 Quick Reference
 
 ### Key Files
-- **[CLAUDE.md](./development/CLAUDE.md)** - Claude Code guidance and project overview
+- **[CLAUDE.md](../CLAUDE.md)** - Claude Code guidance and project overview
 - **[README.md](../README.md)** - Main project documentation
 - **[Docker Configuration](../docker-compose.yml)** - Container orchestration
 - **[Environment Examples](../.env.production.example)** - Configuration templates
@@ -70,9 +70,10 @@ Welcome to the neversatisfiedxo Premium Trailer Gallery documentation. This guid
 **Frontend Development**:
 ```bash
 cd apps/web
-npm run dev        # Start development server
-npm run build      # Production build
-npm run lint       # ESLint checking
+npm run dev        # Start development server with Turbopack (port 3000)
+npm run build      # Production build with security & type checks
+npm run lint       # ESLint with caching
+npm run test       # Complete test suite
 ```
 
 **Backend Development**:
@@ -85,9 +86,10 @@ python manage.py test trailers         # Run tests
 
 **Docker Operations**:
 ```bash
-docker-compose up -d                    # Start all services
-docker-compose --profile production up # Production deployment
-docker-compose logs -f web             # View logs
+docker compose up -d                    # Start all services
+docker compose --profile production up -d # Production deployment
+docker compose logs -f v0_trailer_web   # View frontend logs
+docker compose exec v0_trailer_mediacms python manage.py import_videodb /app/data/VideoDB.csv --user admin # Import data
 ```
 
 ## 🆘 Troubleshooting
@@ -126,4 +128,6 @@ For technical support:
 ---
 
 **📝 Last Updated**: January 2025  
-**📊 Project Status**: Production Ready with Enterprise Security
+**📊 Project Status**: ✅ Production Ready with Enterprise Security & Modern Stack  
+**🚀 Version**: 2.0 - Enterprise Edition with Next.js 15.5.2, React 19.1.0, TypeScript 5  
+**🏗️ Architecture**: Modern full-stack with advanced security, performance monitoring, and CI/CD
