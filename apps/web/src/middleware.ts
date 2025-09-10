@@ -22,8 +22,11 @@ function generateNonce(): string {
 }
 
 // Generate CSP header with environment-specific configuration
-function generateCSPHeader(nonce: string): string {
+function generateCSPHeader(nonce: string, request: NextRequest): string {
   const isDevelopment = process.env.NODE_ENV === 'development'
+  const host = request.headers.get('host') || 'localhost:3000'
+  const protocol = request.headers.get('x-forwarded-proto') || 'http'
+  const origin = `${protocol}://${host}`
   
   const cspHeader = isDevelopment ? `
     default-src 'self';
@@ -42,8 +45,8 @@ function generateCSPHeader(nonce: string): string {
     object-src 'none';
   ` : `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' https://challenges.cloudflare.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    script-src 'self' 'nonce-${nonce}' 'unsafe-eval' ${origin} https://videos.neversatisfiedxo.com https://challenges.cloudflare.com;
+    style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' data: https://videodelivery.net https://imagedelivery.net https://*.cloudflarestream.com blob:;
     media-src 'self' https://videodelivery.net https://*.cloudflarestream.com blob:;
@@ -131,8 +134,8 @@ function addSecurityHeaders(response: NextResponse, nonce?: string, cspHeaderVal
     response.headers.set('Content-Security-Policy', cspHeaderValue)
   }
   
-  // Add nonce header for scripts and styles (production only)
-  if (nonce && !isDevelopment) {
+  // Add nonce header for scripts and styles (always set for CSP compatibility)
+  if (nonce) {
     response.headers.set('x-nonce', nonce)
   }
   
@@ -235,7 +238,7 @@ export async function middleware(request: NextRequest) {
 
   // Generate nonce for CSP security
   const nonce = generateNonce()
-  const cspHeaderValue = generateCSPHeader(nonce)
+  const cspHeaderValue = generateCSPHeader(nonce, request)
 
   // Security validation: Check for suspicious patterns
   const suspiciousPatterns = [

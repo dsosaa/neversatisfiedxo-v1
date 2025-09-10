@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google";
+import { headers } from 'next/headers';
 import "./globals.css";
 import { Providers } from "@/lib/providers";
 
@@ -37,13 +38,30 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Get nonce from middleware for CSP compatibility
+  const nonce = (await headers()).get('x-nonce') || undefined;
+
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        {/* CSP-compatible meta tags with nonce if available */}
+        {nonce && (
+          <script
+            nonce={nonce}
+            dangerouslySetInnerHTML={{
+              __html: `
+                // CSP-compatible hydration preparation
+                window.__CSP_NONCE__ = '${nonce}';
+              `,
+            }}
+          />
+        )}
+      </head>
       <body
         className={`${inter.variable} ${jetBrainsMono.variable} ${playfairDisplay.variable} antialiased min-h-screen bg-background text-foreground`}
         suppressHydrationWarning
