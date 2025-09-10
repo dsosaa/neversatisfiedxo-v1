@@ -108,7 +108,6 @@ export const TrailerCard = memo(function TrailerCard({ trailer, onPreview }: Tra
   // Enhanced image loading with fallback and retry logic
   const {
     currentUrl: thumbnailUrl,
-    isLoading: imageLoading,
     hasError: imageError,
     retry: retryImage,
     handleLoad: handleImageLoad,
@@ -192,20 +191,23 @@ export const TrailerCard = memo(function TrailerCard({ trailer, onPreview }: Tra
       <Card className="h-full flex flex-col overflow-hidden border border-zinc-800/40 hover:border-zinc-600/60 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/30 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950 transition-all duration-300 rounded-2xl shadow-xl hover:shadow-2xl bg-gradient-to-br from-zinc-950/95 via-zinc-900/90 to-zinc-950/95 backdrop-blur-md hover:scale-[1.02] group-hover:shadow-sky-500/10">
         <div className="relative aspect-[16/9] bg-muted rounded-t-2xl overflow-hidden">
           {/* Enhanced thumbnail with fallback and retry */}
-          {thumbnailUrls?.medium ? (
+          {thumbnailUrl ? (
             <Image
-              src={thumbnailUrls.medium}
+              src={thumbnailUrl}
               alt={`Thumbnail for ${trailer.title} video trailer`}
               fill
               className="object-cover transition-all duration-300 group-hover:scale-105"
               sizes="(max-width: 640px) 480px, (max-width: 1024px) 480px, 480px"
               loading="lazy"
               priority={false}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
             />
           ) : (
             <ThumbnailSkeleton 
               className="w-full h-full rounded-t-2xl" 
-              showRetry={false}
+              showRetry={imageError}
+              onRetry={imageError ? retryImage : undefined}
             />
           )}
 
@@ -401,7 +403,6 @@ export const TrailerListItem = memo(function TrailerListItem({ trailer, onPrevie
   // Enhanced image loading with fallback and retry logic - restored for consistency with grid view
   const {
     currentUrl: thumbnailUrl,
-    isLoading: imageLoading,
     hasError: imageError,
     retry: retryImage,
     handleLoad: handleImageLoad,
