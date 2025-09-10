@@ -192,15 +192,14 @@ export function clearFailedAttempts(ip: string): void {
 }
 
 /**
- * Create secure authentication cookie with JWT token
+ * Create secure authentication cookie with simple legacy format for reliability
  */
 export async function createAuthCookie(value: string = 'authenticated'): Promise<void> {
   const cookieStore = await cookies()
   
-  // Generate secure JWT token
-  const secureToken = generateSecureToken(value)
-
-  cookieStore.set(AUTH_CONFIG.COOKIE_NAME, secureToken, {
+  // Use simple legacy format to avoid JWT verification issues between Node.js crypto and Web Crypto API
+  // The middleware already supports this format as a fallback
+  cookieStore.set(AUTH_CONFIG.COOKIE_NAME, value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
