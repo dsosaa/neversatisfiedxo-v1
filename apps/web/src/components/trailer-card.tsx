@@ -127,7 +127,7 @@ export const TrailerCard = memo(function TrailerCard({ trailer, onPreview }: Tra
   // Smart preloading with intersection observer
   const { elementRef } = useSmartPreload<HTMLDivElement>(
     async () => {
-      if (thumbnailUrls) {
+      if (thumbnailUrls && preloadService) {
         // Preload multiple sizes for responsive behavior
         await preloadService.preloadImages([
           thumbnailUrls.medium,

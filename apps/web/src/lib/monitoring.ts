@@ -352,7 +352,7 @@ export function setupGlobalErrorHandlers(): void {
       'csp_violation',
       'medium',
       'client',
-      navigator.userAgent,
+      typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
       {
         violatedDirective: event.violatedDirective,
         blockedURI: event.blockedURI,

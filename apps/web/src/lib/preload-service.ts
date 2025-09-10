@@ -61,7 +61,7 @@ export class PreloadService {
    * Setup network condition monitoring
    */
   private setupNetworkMonitoring() {
-    if (!('connection' in navigator)) return
+    if (typeof navigator === 'undefined' || !('connection' in navigator)) return
 
     const connection = (navigator as { connection: NetworkInfo }).connection
     const updateNetworkStatus = () => {
@@ -90,7 +90,7 @@ export class PreloadService {
     }
 
     // Check if reduced data usage is preferred
-    if ('storage' in navigator && 'estimate' in navigator.storage) {
+    if (typeof navigator !== 'undefined' && 'storage' in navigator && 'estimate' in navigator.storage) {
       navigator.storage.estimate().then(estimate => {
         const usageRatio = (estimate.usage || 0) / (estimate.quota || 1)
         if (usageRatio > 0.9) return false // Storage almost full
@@ -279,12 +279,13 @@ export class PreloadService {
   }
 }
 
-// Export singleton instance
-export const preloadService = PreloadService.getInstance()
-
 /**
  * React hook for easy preload service access
  */
 export function usePreloadService() {
-  return preloadService
+  // Only instantiate on the client side
+  if (typeof window === 'undefined') {
+    return null
+  }
+  return PreloadService.getInstance()
 }
