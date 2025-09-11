@@ -66,6 +66,7 @@ services:
   # MediaCMS Backend (Django)
   mediacms:
     image: mediacms/mediacms:latest
+    platform: linux/amd64  # Force x86_64 platform for compatibility
     container_name: v0_trailer_mediacms
     restart: unless-stopped
     ports:
@@ -85,16 +86,27 @@ services:
       - mediacms_data:/home/mediacms.io/mediacms/media_files
       - mediacms_logs:/home/mediacms.io/mediacms/logs
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - v0_trailer_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/api/v1/"]
+      test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 120s
+    # Resource limits for production stability
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.3'
+          memory: 512M
 
   # PostgreSQL Database
   postgres:
