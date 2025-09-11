@@ -37,6 +37,7 @@ services:
       - MONITORING_WEBHOOK_URL=${MONITORING_WEBHOOK_URL}
     volumes:
       - web_data:/app/.next/cache
+      - ./data:/app/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,7 +48,7 @@ services:
     networks:
       - v0_trailer_network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      test: ["CMD", "node", "healthcheck.js"]
       interval: 30s
       timeout: 10s
       retries: 5

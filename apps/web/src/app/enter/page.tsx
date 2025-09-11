@@ -68,11 +68,26 @@ export default function EnterPage() {
       if (result.success) {
         setIsSuccess(true)
         toast.success('Access granted! Welcome to the gallery')
+        console.log('🎉 Authentication successful, preparing redirect...')
         
-        // Delay navigation for success animation
+        // Delay navigation for success animation with fallback
         setTimeout(() => {
-          router.push('/')
+          console.log('🚀 Attempting router.push navigation...')
+          try {
+            router.push('/')
+          } catch (error) {
+            console.error('Router navigation failed, using window.location:', error)
+            window.location.href = '/'
+          }
         }, 1200)
+        
+        // Backup redirect after 3 seconds if router.push fails
+        setTimeout(() => {
+          if (window.location.pathname === '/enter') {
+            console.log('🔄 Backup redirect triggered - router.push may have failed')
+            window.location.href = '/'
+          }
+        }, 3000)
       } else {
         const newAttemptCount = attemptCount + 1
         setAttemptCount(newAttemptCount)

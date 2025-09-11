@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-REPO_URL="${REPO_URL:-https://github.com/yourusername/neversatisfiedxo.git}"
+REPO_URL="${REPO_URL:-https://github.com/nsxo/V0-Trailer.git}"
 APP_DIR="${APP_DIR:-/opt/neversatisfiedxo}"
 APP_USER="${APP_USER:-deploy}"
 DOMAIN="${DOMAIN:-}"
@@ -73,9 +73,14 @@ setup_environment() {
     
     cd "$APP_DIR"
     
-    # Create production .env file if it doesn't exist
-    if [[ ! -f ".env" ]]; then
-        log_info "Creating production .env file..."
+    # Preserve existing .env file or create template if it doesn't exist
+    if [[ -f ".env" ]]; then
+        log_info "✓ Preserving existing .env configuration"
+        # Backup existing .env
+        cp .env .env.backup.$(date +%Y%m%d-%H%M%S)
+        log_info "✓ Backup created: .env.backup.$(date +%Y%m%d-%H%M%S)"
+    else
+        log_info "Creating production .env file template..."
         
         cat > .env << 'EOF'
 # Production Environment Configuration
