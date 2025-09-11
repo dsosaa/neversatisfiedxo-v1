@@ -129,7 +129,7 @@ export function QuickPreview({ trailer, open, onOpenChange }: QuickPreviewProps)
                       autoplay={true}
                       muted={true}
                       className="rounded-none"
-                      poster={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?width=1920&height=1080&quality=95&fit=crop&format=webp`}
+                      poster={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=5s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`}
                     />
                   </m.div>
                 )}

@@ -5,6 +5,12 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runner
+      # BuildKit cache optimization (disabled for local builds)
+      # cache_from:
+        # - v0_trailer_web:cache
+      # Parallel build arguments
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     container_name: v0_trailer_web
     restart: unless-stopped
     ports:
@@ -49,10 +55,10 @@ services:
       - v0_trailer_network
     healthcheck:
       test: ["CMD", "node", "healthcheck.js"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     # Resource limits for production stability (adjusted for single CPU server)
     deploy:
       resources:
@@ -65,7 +71,9 @@ services:
 
   # MediaCMS Backend (Django)
   mediacms:
-    image: mediacms/mediacms:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.mediacms-ultra
     platform: linux/amd64  # Force x86_64 platform for compatibility
     container_name: v0_trailer_mediacms
     restart: unless-stopped
@@ -93,11 +101,11 @@ services:
     networks:
       - v0_trailer_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
     # Resource limits for production stability
     deploy:
       resources:
@@ -124,10 +132,10 @@ services:
       - v0_trailer_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mediacms} -d ${POSTGRES_DB:-mediacms}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
 
   # Redis Cache
   redis:
@@ -141,10 +149,10 @@ services:
       - v0_trailer_network
     healthcheck:
       test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
 
   # Nginx Reverse Proxy (Optional for production)
   nginx:

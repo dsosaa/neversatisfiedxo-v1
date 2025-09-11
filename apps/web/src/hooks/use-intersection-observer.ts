@@ -129,8 +129,8 @@ export function useSmartPreload<T extends Element = HTMLDivElement>(
   const shouldPreload = useCallback(() => {
     if (!enabled || hasPreloadedRef.current) return false
 
-    // Respect user's data saver preference
-    if ('connection' in navigator) {
+    // Respect user's data saver preference (only on client side)
+    if (typeof navigator !== 'undefined' && 'connection' in navigator) {
       const connection = (navigator as { connection: { saveData?: boolean; effectiveType?: string } }).connection
       if (connection?.saveData) return false
       

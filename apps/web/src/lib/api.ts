@@ -87,7 +87,7 @@ class ApiClient {
       baseURL = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL || 'http://localhost:3000'
     }
     
-    const fullURL = `${baseURL}/api/trailers?cf_video_uid=${id}`
+    const fullURL = `${baseURL}/api/trailers/${id}`
     
     try {
       const response = await fetch(fullURL)
@@ -98,12 +98,8 @@ class ApiClient {
       
       const data = await response.json()
       
-      // Return the first result since we're filtering by unique cf_video_uid
-      if (data.results && data.results.length > 0) {
-        return data.results[0]
-      }
-      
-      throw new Error('Trailer not found')
+      // The individual trailer endpoint returns the trailer object directly
+      return data
     } catch (error) {
       const errorInfo = {
         url: fullURL,

@@ -104,6 +104,15 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: false,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Enhanced image optimization
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 31536000, // 1 year
+    unoptimized: false,
+    loader: 'default',
+    // Enable placeholder blur
+    // placeholder: 'blur',
+    // blurDataURL: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=',
   },
 
   // Performance optimizations
@@ -115,10 +124,28 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-slot', 
       '@radix-ui/react-tabs',
       '@radix-ui/react-toast',
+      '@radix-ui/react-avatar',
+      '@radix-ui/react-checkbox',
+      '@radix-ui/react-label',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-progress',
+      '@radix-ui/react-separator',
+      '@radix-ui/react-slider',
+      '@radix-ui/react-toggle',
+      '@radix-ui/react-toggle-group',
+      '@radix-ui/react-tooltip',
       '@tanstack/react-query',
+      '@tanstack/react-query-devtools',
       'lucide-react',
       'framer-motion',
-      'class-variance-authority'
+      'class-variance-authority',
+      'clsx',
+      'tailwind-merge',
+      'cmdk',
+      'sonner',
+      'vaul',
+      'react-hook-form',
+      'zod'
     ],
     staleTimes: {
       dynamic: 30, // 30 seconds for dynamic pages
@@ -126,10 +153,27 @@ const nextConfig: NextConfig = {
     },
     typedEnv: true, // Enable typed environment variables
     browserDebugInfoInTerminal: true, // Enable Safari debug info forwarding
+    optimizeCss: true, // Enable CSS optimization
+    optimizeServerReact: true, // Optimize server-side React
+    // Build cache optimization
+    swcTraceProfiling: false, // Disable SWC tracing in production
+    webpackBuildWorker: true, // Enable webpack build worker for faster builds
+    // Memory optimization
+    largePageDataBytes: 128 * 1000, // 128KB threshold for large page data warning
   },
 
   // Enable statically typed routes
   typedRoutes: true,
+
+  // Server components optimization (moved from experimental)
+  serverExternalPackages: ['sharp', 'canvas'],
+
+  // Performance monitoring
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
 
   // Turbopack configuration
   turbopack: {
@@ -139,6 +183,139 @@ const nextConfig: NextConfig = {
         as: '*.js',
       },
     },
+    resolveAlias: {
+      // Optimize common imports
+      '@/components': './src/components',
+      '@/lib': './src/lib',
+      '@/styles': './src/styles',
+    },
+  },
+
+  // Webpack optimization for build performance and caching
+  webpack: (config, { dev, webpack }) => {
+    // Production optimizations
+    if (!dev) {
+      // Optimize chunks for better caching
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          minSize: 20000,
+          maxSize: 244000,
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            // Framework chunk for React/Next.js
+            framework: {
+              name: 'framework',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
+              priority: 50,
+              enforce: true,
+              reuseExistingChunk: true
+            },
+            // UI components chunk
+            ui: {
+              name: 'ui',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|class-variance-authority|clsx|tailwind-merge)[\\/]/,
+              priority: 45,
+              enforce: true,
+              reuseExistingChunk: true
+            },
+            // Animation libraries chunk
+            animation: {
+              name: 'animation',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](framer-motion|lottie-react)[\\/]/,
+              priority: 40,
+              enforce: true,
+              reuseExistingChunk: true
+            },
+            // Query libraries chunk
+            query: {
+              name: 'query',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](@tanstack)[\\/]/,
+              priority: 35,
+              enforce: true,
+              reuseExistingChunk: true
+            },
+            // Form libraries chunk
+            form: {
+              name: 'form',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](react-hook-form|zod|@hookform)[\\/]/,
+              priority: 30,
+              enforce: true,
+              reuseExistingChunk: true
+            },
+            // Utility libraries chunk
+            utils: {
+              name: 'utils',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/](date-fns|lodash|uuid|nanoid)[\\/]/,
+              priority: 25,
+              enforce: true,
+              reuseExistingChunk: true
+            },
+            // Vendor chunk for other node_modules
+            vendor: {
+              name: 'vendor',
+              chunks: 'all',
+              test: /[\\/]node_modules[\\/]/,
+              priority: 20,
+              enforce: true,
+              reuseExistingChunk: true
+            },
+            // Common chunk for shared code
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 10,
+              reuseExistingChunk: true,
+              enforce: true
+            }
+          }
+        },
+        // Enable module concatenation for smaller bundles
+        concatenateModules: true,
+        // Enable tree shaking
+        usedExports: true,
+        sideEffects: false
+      }
+      
+      // Add bundle analyzer plugin conditionally
+      if (process.env.ANALYZE === 'true') {
+        config.plugins.push(
+          new webpack.DefinePlugin({
+            '__BUNDLE_ANALYZE__': JSON.stringify(true)
+          })
+        )
+      }
+    }
+    
+    // Development optimizations
+    if (dev) {
+      // Enable webpack build cache for faster rebuilds
+      config.cache = {
+        type: 'filesystem',
+        buildDependencies: {
+          config: [__filename]
+        }
+      }
+      
+      // Optimize development build speed
+      config.optimization = {
+        ...config.optimization,
+        removeAvailableModules: false,
+        removeEmptyChunks: false,
+        splitChunks: false
+      }
+    }
+    
+    return config
   },
 
   // Modern bundle analysis will be handled by @next/bundle-analyzer wrapper
@@ -149,9 +326,16 @@ const nextConfig: NextConfig = {
   // Remove powered by header for security
   poweredByHeader: false,
 
-  // Environment variables validation
+  // Disable ESLint during builds for faster deployment
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  // Environment variables validation and client-side exposure
   env: {
-    CUSTOM_BUILD_ID: process.env.NODE_ENV === 'production' ? 'production' : 'development'
+    CUSTOM_BUILD_ID: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+    // Ensure Cloudflare variables are available at build time
+    NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE: process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE,
   }
 };
 

@@ -29,14 +29,18 @@ export const useVerifyPassword = () => {
 }
 
 // Trailer hooks
-export const useTrailers = (filters: TrailerFilters = {}) => {
+export const useTrailers = (filters: TrailerFilters = {}, options: { enabled?: boolean } = {}) => {
   return useQuery({
     queryKey: queryKeys.trailersWithFilters(filters),
     queryFn: () => apiClient.getTrailers(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    enabled: options.enabled !== false,
+    staleTime: 15 * 60 * 1000, // 15 minutes (increased for better performance)
+    gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
+    retry: 2, // Reduced retries for faster failure
+    retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 5000), // Faster retry
+    refetchOnWindowFocus: false, // Disable refetch on window focus
+    refetchOnMount: false, // Disable refetch on mount if data exists
+    refetchOnReconnect: 'always', // Only refetch on reconnect
   })
 }
 
@@ -45,8 +49,13 @@ export const useTrailer = (id: string) => {
     queryKey: queryKeys.trailer(id),
     queryFn: () => apiClient.getTrailer(id),
     enabled: !!id,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 30 * 60 * 1000, // 30 minutes (increased for video data)
+    gcTime: 60 * 60 * 1000, // 60 minutes (increased for video data)
+    retry: 2, // Reduced retries for faster failure
+    retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 5000), // Faster retry
+    refetchOnWindowFocus: false, // Disable refetch on window focus
+    refetchOnMount: false, // Disable refetch on mount if data exists
+    refetchOnReconnect: 'always', // Only refetch on reconnect
   })
 }
 
@@ -55,8 +64,12 @@ export const useSearchTrailers = (query: string, enabled: boolean = true) => {
     queryKey: ['trailers', 'search', query],
     queryFn: () => apiClient.searchTrailers(query),
     enabled: enabled && query.length > 2,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes (increased for search results)
+    gcTime: 15 * 60 * 1000, // 15 minutes (increased for search results)
+    retry: 1, // Reduced retries for search
+    retryDelay: 1000, // Fixed retry delay for search
+    refetchOnWindowFocus: false, // Disable refetch on window focus
+    refetchOnMount: false, // Disable refetch on mount if data exists
   })
 }
 

@@ -202,9 +202,10 @@ export async function createAuthCookie(value: string = 'authenticated'): Promise
   cookieStore.set(AUTH_CONFIG.COOKIE_NAME, value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: AUTH_CONFIG.COOKIE_MAX_AGE,
     path: '/',
+    domain: process.env.NODE_ENV === 'production' ? '.neversatisfiedxo.com' : undefined,
   })
 }
 
@@ -313,6 +314,24 @@ export function logSecurityEvent(event: SecurityEvent): void {
     timestamp: new Date(event.timestamp).toISOString()
   })
 
-  // TODO: Integrate with external logging service (e.g., Sentry, LogRocket)
-  // await sendToSecurityLog(event)
+  // Integrate with monitoring system for external logging
+  // TODO: Fix monitoring integration
+  // if (typeof window !== 'undefined') {
+  //   import('./monitoring').then(({ trackSecurityEvent }) => {
+  //     // Map auth event types to monitoring event types
+  //     const monitoringType = event.type === 'auth_failure' || event.type === 'lockout' 
+  //       ? 'auth_failure' as const
+  //       : 'suspicious_activity' as const
+  //       
+  //     trackSecurityEvent(
+  //       monitoringType,
+  //       'medium', // severity
+  //       event.ip,
+  //       navigator?.userAgent || 'unknown',
+  //       { originalType: event.type, ...event.metadata }
+  //     )
+  //   }).catch(error => {
+  //     console.warn('Failed to log security event to monitoring system:', error)
+  //   })
+  // }
 }

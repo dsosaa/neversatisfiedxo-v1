@@ -1,19 +1,34 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { m, AnimatePresence } from '@/lib/motion'
 import { ArrowLeft, Clock, DollarSign, User, Calendar, Share, Heart, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { CloudflarePlayer } from '@/components/cloudflare-player'
-import { TrailerCard, TrailerGrid, TrailerCardSkeleton } from '@/components/trailer-card'
 import { useTrailer, useRelatedTrailers, usePrefetchTrailer } from '@/lib/hooks'
 import { formatPrice, parseLength, formatLength, parsePrice } from '@/lib/api'
 import { useBrowserDetection, getBrowserSafeBackdrop } from '@/lib/utils/browser-detection'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+
+// Lazy load heavy components to reduce initial bundle size
+const CloudflarePlayer = lazy(() => import('@/components/cloudflare-player').then(module => ({
+  default: module.CloudflarePlayer
+})))
+
+const TrailerCard = lazy(() => import('@/components/trailer-card').then(module => ({
+  default: module.TrailerCard
+})))
+
+const TrailerGrid = lazy(() => import('@/components/trailer-card').then(module => ({
+  default: module.TrailerGrid
+})))
+
+const TrailerCardSkeleton = lazy(() => import('@/components/trailer-card').then(module => ({
+  default: module.TrailerCardSkeleton
+})))
 
 export default function VideoDetailPage() {
   const params = useParams()
@@ -140,13 +155,19 @@ export default function VideoDetailPage() {
                   transition={{ duration: 0.5 }}
                   className="aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl"
                 >
-                  <CloudflarePlayer
-                    uid={trailer.cf_video_uid}
-                    autoplay={false}
-                    muted={false}
-                    className="rounded-2xl"
-                    poster={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?width=1920&height=1080&quality=95&fit=crop&format=webp`}
-                  />
+                  <Suspense fallback={
+                    <div className="w-full h-full bg-muted animate-pulse flex items-center justify-center">
+                      <div className="text-muted-foreground">Loading player...</div>
+                    </div>
+                  }>
+                    <CloudflarePlayer
+                      uid={trailer.cf_video_uid}
+                      autoplay={false}
+                      muted={false}
+                      className="rounded-2xl"
+                      poster={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=5s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`}
+                    />
+                  </Suspense>
                 </m.div>
               </div>
             ) : (
@@ -155,13 +176,19 @@ export default function VideoDetailPage() {
                   ref={mainPlayerRef}
                   className="aspect-video rounded-2xl overflow-hidden bg-black shadow-xl opacity-100"
                 >
-                  <CloudflarePlayer
-                    uid={trailer.cf_video_uid}
-                    autoplay={false}
-                    muted={false}
-                    className="rounded-2xl"
-                    poster={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?width=1920&height=1080&quality=95&fit=crop&format=webp`}
-                  />
+                  <Suspense fallback={
+                    <div className="w-full h-full bg-muted animate-pulse flex items-center justify-center">
+                      <div className="text-muted-foreground">Loading player...</div>
+                    </div>
+                  }>
+                    <CloudflarePlayer
+                      uid={trailer.cf_video_uid}
+                      autoplay={false}
+                      muted={false}
+                      className="rounded-2xl"
+                      poster={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=5s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`}
+                    />
+                  </Suspense>
                 </div>
               </div>
             )}
@@ -830,12 +857,18 @@ export default function VideoDetailPage() {
                 <div className="flex items-center gap-4">
                   {/* Mini Player */}
                   <div className="w-32 aspect-video rounded-lg overflow-hidden bg-black flex-shrink-0">
-                    <CloudflarePlayer
-                      uid={trailer.cf_video_uid}
-                      autoplay={true}
-                      muted={true}
-                      className="rounded-lg"
-                    />
+                    <Suspense fallback={
+                      <div className="w-full h-full bg-muted animate-pulse flex items-center justify-center">
+                        <div className="text-muted-foreground text-xs">Loading...</div>
+                      </div>
+                    }>
+                      <CloudflarePlayer
+                        uid={trailer.cf_video_uid}
+                        autoplay={true}
+                        muted={true}
+                        className="rounded-lg"
+                      />
+                    </Suspense>
                   </div>
 
                   {/* Info */}
@@ -877,12 +910,18 @@ export default function VideoDetailPage() {
                 <div className="flex items-center gap-4">
                   {/* Mini Player */}
                   <div className="w-32 aspect-video rounded-lg overflow-hidden bg-black flex-shrink-0">
-                    <CloudflarePlayer
-                      uid={trailer.cf_video_uid}
-                      autoplay={true}
-                      muted={true}
-                      className="rounded-lg"
-                    />
+                    <Suspense fallback={
+                      <div className="w-full h-full bg-muted animate-pulse flex items-center justify-center">
+                        <div className="text-muted-foreground text-xs">Loading...</div>
+                      </div>
+                    }>
+                      <CloudflarePlayer
+                        uid={trailer.cf_video_uid}
+                        autoplay={true}
+                        muted={true}
+                        className="rounded-lg"
+                      />
+                    </Suspense>
                   </div>
 
                   {/* Info */}

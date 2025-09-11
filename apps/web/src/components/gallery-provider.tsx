@@ -14,6 +14,16 @@ const FilterSidebar = lazy(() => import('@/components/filter-sidebar').then(modu
   default: module.FilterSidebar
 })))
 
+// Lazy load command palette (heavy component with search functionality)
+// const CommandPalette = lazy(() => import('@/components/command-palette').then(module => ({
+//   default: module.CommandPalette
+// })))
+
+// Lazy load monitoring dashboard (development only)
+// const MonitoringDashboard = lazy(() => import('@/components/MonitoringDashboard').then(module => ({
+//   default: module.default
+// })))
+
 // Loading skeleton for FilterSidebar
 function FilterSidebarSkeleton({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   if (!isOpen) return null
@@ -65,14 +75,18 @@ export function GalleryProvider({ initialData }: GalleryProviderProps) {
   // Debounce search query to avoid excessive API calls
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
 
-  // Fetch data - always call both hooks but enable conditionally
+  // Fetch data - only call hooks when needed
   const searchEnabled = searchQuery.trim().length > 2
   const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchTrailers(debouncedSearchQuery, searchEnabled)
-  const { data: trailersData, isLoading: trailersLoading, error: trailersError } = useTrailers(filters)
+  
+  // Only fetch trailers if we don't have initial data or if filters are applied
+  const hasFilters = Object.keys(filters).length > 0
+  const shouldFetchTrailers = !initialData || hasFilters
+  const { data: trailersData, isLoading: trailersLoading, error: trailersError } = useTrailers(filters, { enabled: shouldFetchTrailers })
 
   // Use search data if searching, otherwise use filtered trailers, fallback to initial data
-  const finalData = searchEnabled ? searchData : trailersData || initialData
-  const isLoading = searchEnabled ? searchLoading : trailersLoading
+  const finalData = searchEnabled ? searchData : (trailersData || initialData)
+  const isLoading = searchEnabled ? searchLoading : (shouldFetchTrailers ? trailersLoading : false)
   const error = searchEnabled ? searchError : trailersError
 
   // Note: Latest video number is now calculated server-side

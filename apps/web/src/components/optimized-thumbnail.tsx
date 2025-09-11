@@ -41,11 +41,12 @@ export function OptimizedThumbnail({
     )
   }
 
-  // Generate ultra high-quality thumbnail URL from Cloudflare Stream
-  const thumbnailUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?width=2560&height=1440&quality=95&fit=crop&format=webp`
+  // Generate optimized thumbnail URL following Cloudflare Stream best practices
+  // Use responsive dimensions and optimal quality settings as per official docs
+  const thumbnailUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?time=5s&height=720&quality=85&fit=crop`
   
   // Fallback to a different timestamp with same quality if default fails
-  const fallbackUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?width=2560&height=1440&quality=95&fit=crop&format=webp&time=10s`
+  const fallbackUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?time=10s&height=720&quality=85&fit=crop`
 
   if (hasError) {
     return (
@@ -176,7 +177,7 @@ export function CompactThumbnail({
     )
   }
 
-  const thumbnailUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?width=1200&height=675&quality=90&fit=crop&format=webp`
+  const thumbnailUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?height=400&quality=80&fit=crop`
 
   return (
     <div className={cn('relative aspect-video rounded-lg overflow-hidden', className)}>

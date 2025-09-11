@@ -3,66 +3,53 @@ import type { NextRequest } from 'next/server'
 
 const COOKIE_NAME = 'nsx_gate'
 const PROTECTED_PATHS = ['/', '/video']
-const PUBLIC_PATHS = ['/enter', '/api/gate', '/api/health']
+const PUBLIC_PATHS = ['/enter', '/api/gate', '/api/health', '/gallery', '/test-image']
 
-// Rate limiting configuration
+// Rate limiting configuration - Temporarily increased for debugging
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
-const RATE_LIMIT_MAX_REQUESTS = 100 // max requests per window
-const RATE_LIMIT_AUTH_MAX = 5 // max auth attempts per window
+const RATE_LIMIT_MAX_REQUESTS = 10000 // max requests per window (increased for debugging)
+const RATE_LIMIT_AUTH_MAX = 50 // max auth attempts per window (increased for debugging)
 
 // In-memory rate limiting (use Redis/database in production)
 const rateLimitStore = new Map<string, { requests: number; resetTime: number; authAttempts: number }>()
 
-// Generate nonce for CSP as per Context7 best practices
-function generateNonce(): string {
-  // Use Web Crypto API for Edge Runtime compatibility
-  const array = new Uint8Array(16)
-  crypto.getRandomValues(array)
-  return btoa(String.fromCharCode(...array))
+// Clear rate limit store function for debugging
+function clearRateLimitStore() {
+  rateLimitStore.clear()
+  console.log('🧹 Rate limit store cleared')
 }
 
-// Generate CSP header with environment-specific configuration
-function generateCSPHeader(nonce: string, request: NextRequest): string {
+// Generate nonce for CSP following Next.js official best practices
+function generateNonce(): string {
+  // Use Buffer and crypto.randomUUID as per Next.js documentation
+  return Buffer.from(crypto.randomUUID()).toString('base64')
+}
+
+// Generate CSP header following Next.js official patterns
+function generateCSPHeader(nonce: string): string {
   const isDevelopment = process.env.NODE_ENV === 'development'
-  const host = request.headers.get('host') || 'localhost:3000'
-  const protocol = request.headers.get('x-forwarded-proto') || 'http'
-  const origin = `${protocol}://${host}`
   
-  const cspHeader = isDevelopment ? `
+  // Following Next.js official CSP patterns with nonce and strict-dynamic
+  const baseCSP = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    font-src 'self' https://fonts.gstatic.com;
+    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${isDevelopment ? "'unsafe-eval'" : ''} https://challenges.cloudflare.com;
+    style-src 'self' 'nonce-${nonce}' ${isDevelopment ? "'unsafe-inline'" : ''} https://fonts.googleapis.com;
     img-src 'self' data: https://videodelivery.net https://imagedelivery.net https://*.cloudflarestream.com blob:;
+    font-src 'self' https://fonts.gstatic.com;
     media-src 'self' https://videodelivery.net https://*.cloudflarestream.com blob:;
     frame-src 'self' https://iframe.videodelivery.net https://challenges.cloudflare.com;
     connect-src 'self' https://cloudflareinsights.com https://api.cloudflare.com https://*.cloudflarestream.com;
     worker-src 'self' blob:;
     manifest-src 'self';
+    object-src 'none';
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    object-src 'none';
-  ` : `
-    default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'unsafe-inline' 'unsafe-eval' ${origin} https://videos.neversatisfiedxo.com https://challenges.cloudflare.com;
-    style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com;
-    font-src 'self' https://fonts.gstatic.com;
-    img-src 'self' data: https://videodelivery.net https://imagedelivery.net https://*.cloudflarestream.com blob:;
-    media-src 'self' https://videodelivery.net https://*.cloudflarestream.com blob:;
-    frame-src 'self' https://iframe.videodelivery.net https://challenges.cloudflare.com;
-    connect-src 'self' https://cloudflareinsights.com https://api.cloudflare.com https://*.cloudflarestream.com;
-    worker-src 'self' blob:;
-    manifest-src 'self';
-    base-uri 'self';
-    form-action 'self';
-    frame-ancestors 'none';
-    object-src 'none';
-    upgrade-insecure-requests;
+    ${isDevelopment ? '' : 'upgrade-insecure-requests;'}
   `
   
-  // Replace newline characters and spaces for clean header
-  return cspHeader.replace(/\s{2,}/g, ' ').trim()
+  // Replace newline characters and spaces for clean header as per Next.js docs
+  return baseCSP.replace(/\s{2,}/g, ' ').trim()
 }
 
 function getRateLimitKey(request: NextRequest): string {
@@ -232,13 +219,26 @@ async function isValidAuthentication(authCookie: { value?: string } | undefined)
 }
 
 export async function middleware(request: NextRequest) {
+  // Clear rate limit store for debugging (remove in production)
+  clearRateLimitStore()
+  
   const { pathname } = request.nextUrl
   const authCookie = request.cookies.get(COOKIE_NAME)
   const isAuthenticated = await isValidAuthentication(authCookie)
+  
+  // Debug logging
+  if (pathname === '/enter') {
+    console.log('🔍 Middleware debug:', {
+      pathname,
+      hasCookie: !!authCookie,
+      cookieValue: authCookie?.value,
+      isAuthenticated
+    })
+  }
 
-  // Generate nonce for CSP security
+  // Generate nonce for CSP security following Next.js official pattern
   const nonce = generateNonce()
-  const cspHeaderValue = generateCSPHeader(nonce, request)
+  const cspHeaderValue = generateCSPHeader(nonce)
 
   // Security validation: Check for suspicious patterns
   const suspiciousPatterns = [
@@ -288,7 +288,18 @@ export async function middleware(request: NextRequest) {
 
   // Allow public paths
   if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
-    const response = NextResponse.next()
+    // Create request headers with nonce as per Next.js official pattern
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-nonce', nonce)
+    
+    const response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
+    
+    // Set CSP header as per Next.js documentation
+    response.headers.set('Content-Security-Policy', cspHeaderValue)
     response.headers.set('X-RateLimit-Remaining', remaining.toString())
     return addSecurityHeaders(response, nonce, cspHeaderValue)
   }
@@ -322,14 +333,25 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // If authenticated and trying to access login page, redirect to home
+  // If authenticated and trying to access login page, redirect to gallery
   if (isAuthenticated && pathname === '/enter') {
-    const homeUrl = new URL('/', request.url)
-    return NextResponse.redirect(homeUrl)
+    console.log('🔄 Redirecting authenticated user from /enter to /gallery')
+    const galleryUrl = new URL('/gallery', request.url)
+    return NextResponse.redirect(galleryUrl)
   }
 
-  // Add security headers to authenticated requests
-  const response = NextResponse.next()
+  // Add security headers to authenticated requests following Next.js pattern
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-nonce', nonce)
+  
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
+  
+  // Set CSP header as per Next.js documentation
+  response.headers.set('Content-Security-Policy', cspHeaderValue)
   response.headers.set('X-RateLimit-Remaining', remaining.toString())
   return addSecurityHeaders(response, nonce, cspHeaderValue)
 }

@@ -22,6 +22,7 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
   const streamUrl = useMemo(() => {
     if (!uid) return ''
     
+    // Use customer-specific URL for proper Cloudflare Stream integration
     const baseUrl = `https://iframe.videodelivery.net/${uid}`
     const params = new URLSearchParams()
     
@@ -41,6 +42,11 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
     // The iframe player will automatically show 2160p if the source supports it
     params.append('responsive', 'true')
     params.append('defaultTextTrack', 'off')
+    
+    // Add customer code for proper authentication
+    if (customerCode) {
+      params.append('customerCode', customerCode)
+    }
     
     // Safari-specific optimizations for better video performance
     if (browserInfo.isSafari) {
@@ -62,7 +68,7 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
     
     const queryString = params.toString()
     return `${baseUrl}${queryString ? `?${queryString}` : ''}`
-  }, [uid, autoplay, muted, poster, browserInfo.isSafari, browserInfo.supportsVideoAutoplay])
+  }, [uid, autoplay, muted, poster, customerCode, browserInfo.isSafari, browserInfo.supportsVideoAutoplay])
 
   // Alternative: Direct video source URLs for manual quality selection (unused for now)
   // const directVideoUrls = useMemo(() => {
@@ -112,7 +118,10 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
         'aspect-video bg-muted rounded-2xl flex items-center justify-center',
         className
       )}>
-        <p className="text-muted-foreground">Player configuration error</p>
+        <div className="text-center">
+          <p className="text-muted-foreground mb-2">Player configuration error</p>
+          <p className="text-xs text-muted-foreground">Missing Cloudflare customer code</p>
+        </div>
       </div>
     )
   }
@@ -166,18 +175,7 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
         allowFullScreen
         onLoad={handleLoad}
         onError={handleError}
-        loading={browserInfo.isSafari ? "eager" : "lazy"}
-        style={{
-          // Ensure the iframe can handle 4K resolution
-          maxWidth: '100%',
-          maxHeight: '100%',
-          // Safari-specific optimizations
-          ...(browserInfo.isSafari && {
-            WebkitTransform: 'translateZ(0)',
-            transform: 'translateZ(0)',
-            willChange: 'auto'
-          })
-        }}
+        loading="eager"
       />
     </div>
   )
@@ -268,7 +266,7 @@ export const SignedCloudflarePlayer = memo(function SignedCloudflarePlayer({
         allowFullScreen
         onLoad={handleLoad}
         onError={handleError}
-        loading="lazy"
+        loading="eager"
       />
     </div>
   )

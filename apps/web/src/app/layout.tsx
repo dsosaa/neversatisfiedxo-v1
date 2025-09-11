@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google";
 import { headers } from 'next/headers';
 import "./globals.css";
 import { Providers } from "@/lib/providers";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -23,10 +24,18 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "neversatisfiedxo | Premium Gallery",
+  title: "neversatisfiedxo | Video Vault",
   description: "Exclusive premium content gallery by neversatisfiedxo",
   keywords: ["premium", "gallery", "exclusive", "content"],
   robots: "noindex, nofollow",
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' }
+    ],
+    apple: [
+      { url: '/apple-icon.svg', type: 'image/svg+xml' }
+    ]
+  },
   other: {
     // Prevent iOS automatic format detection to avoid hydration mismatches
     'format-detection': 'telephone=no, date=no, email=no, address=no',
@@ -43,24 +52,14 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Get nonce from middleware for CSP compatibility
-  const nonce = (await headers()).get('x-nonce') || undefined;
+  // Get nonce from middleware for CSP compatibility following Next.js best practices
+  // Next.js automatically uses this for scripts and styles when present in x-nonce header
+  await headers()
 
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
-        {/* CSP-compatible meta tags with nonce if available */}
-        {nonce && (
-          <script
-            nonce={nonce}
-            dangerouslySetInnerHTML={{
-              __html: `
-                // CSP-compatible hydration preparation
-                window.__CSP_NONCE__ = '${nonce}';
-              `,
-            }}
-          />
-        )}
+        {/* Next.js automatically handles script nonces via the nonce from x-nonce header */}
       </head>
       <body
         className={`${inter.variable} ${jetBrainsMono.variable} ${playfairDisplay.variable} antialiased min-h-screen bg-background text-foreground`}
@@ -68,6 +67,7 @@ export default async function RootLayout({
       >
         <Providers>
           {children}
+          <ServiceWorkerRegister />
         </Providers>
       </body>
     </html>

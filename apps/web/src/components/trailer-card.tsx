@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, memo } from 'react'
-import Image from 'next/image'
+import { OptimizedImage } from '@/components/optimized-image'
 import { Play, Clock, Film, DollarSign, User, Eye } from '@/lib/icons'
 import { Card, CardContent } from '@/components/ui/card'
 import { m, conditionalMotion, motionPresets } from '@/lib/motion'
@@ -82,47 +82,50 @@ export const TrailerCard = memo(function TrailerCard({ trailer, onPreview }: Tra
   // Optimized responsive thumbnail URLs with fallback handling
   const thumbnailUrls = useMemo(() => {
     const customerCode = process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE
-    if (!customerCode || !trailer.cf_video_uid) return null
+    if (!customerCode || !trailer.cf_video_uid) {
+      return null
+    }
     
+    // Use the correct Cloudflare Stream thumbnail URL format with video UID and timestamp
     const baseUrl = `https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg`
     const fallbackBaseUrl = `https://customer-${customerCode}.cloudflarestream.com/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg`
     
     return {
       // Enhanced responsive sizes with fallback URLs
-      small: `${baseUrl}?width=480&height=270&quality=88&fit=crop&format=webp&sharpen=1`,
-      medium: `${baseUrl}?width=960&height=540&quality=90&fit=crop&format=webp&sharpen=1`, 
-      large: `${baseUrl}?width=1440&height=810&quality=95&fit=crop&format=webp&sharpen=1`,
+      small: `${baseUrl}?time=5s&width=480&height=270&quality=88&fit=crop&format=webp&sharpen=1`,
+      medium: `${baseUrl}?time=5s&width=960&height=540&quality=90&fit=crop&format=webp&sharpen=1`,
+      large: `${baseUrl}?time=5s&width=1440&height=810&quality=95&fit=crop&format=webp&sharpen=1`,
       // Ultra-high quality for hover/preview
-      ultra: `${baseUrl}?width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`,
+      ultra: `${baseUrl}?time=5s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`,
       // Blur placeholder - tiny, fast-loading version
-      placeholder: `${baseUrl}?width=40&height=23&quality=75&fit=crop&format=webp`,
+      placeholder: `${baseUrl}?time=5s&width=40&height=23&quality=75&fit=crop&format=webp`,
       // Fallback URLs for 400 errors
       fallbacks: {
-        small: `${fallbackBaseUrl}?width=480&height=270&quality=88&fit=crop&format=webp`,
-        medium: `${fallbackBaseUrl}?width=960&height=540&quality=90&fit=crop&format=webp`,
-        large: `${fallbackBaseUrl}?width=1440&height=810&quality=95&fit=crop&format=webp`
+        small: `${fallbackBaseUrl}?time=5s&width=480&height=270&quality=88&fit=crop&format=webp`,
+        medium: `${fallbackBaseUrl}?time=5s&width=960&height=540&quality=90&fit=crop&format=webp`,
+        large: `${fallbackBaseUrl}?time=5s&width=1440&height=810&quality=95&fit=crop&format=webp`
       }
     }
   }, [trailer.cf_video_uid])
   
-  // Enhanced image loading with fallback and retry logic
-  const {
-    currentUrl: thumbnailUrl,
-    hasError: imageError,
-    retry: retryImage,
-    handleLoad: handleImageLoad,
-    handleError: handleImageError
-  } = useImageFallback(
-    thumbnailUrls?.medium || null,
-    {
-      maxRetries: 2,
-      retryDelay: 1000,
-      fallbackUrls: thumbnailUrls?.fallbacks ? [
-        thumbnailUrls.fallbacks.medium,
-        thumbnailUrls.fallbacks.small
-      ] : []
-    }
-  )
+        // Enhanced image loading with fallback and retry logic
+        const {
+          currentUrl: thumbnailUrl,
+          hasError: imageError,
+          retry: retryImage,
+          handleLoad: handleImageLoad,
+          handleError: handleImageError
+        } = useImageFallback(
+          thumbnailUrls?.medium || null,
+          {
+            maxRetries: 2,
+            retryDelay: 1000,
+            fallbackUrls: thumbnailUrls?.fallbacks ? [
+              thumbnailUrls.fallbacks.medium,
+              thumbnailUrls.fallbacks.small
+            ] : []
+          }
+        )
 
   // Smart preloading with intersection observer
   const { elementRef } = useSmartPreload<HTMLDivElement>(
@@ -192,14 +195,14 @@ export const TrailerCard = memo(function TrailerCard({ trailer, onPreview }: Tra
         <div className="relative aspect-[16/9] bg-muted rounded-t-2xl overflow-hidden">
           {/* Enhanced thumbnail with fallback and retry */}
           {thumbnailUrl ? (
-            <Image
+            <OptimizedImage
               src={thumbnailUrl}
               alt={`Thumbnail for ${trailer.title} video trailer`}
               fill
               className="object-cover transition-all duration-300 group-hover:scale-105"
               sizes="(max-width: 640px) 480px, (max-width: 1024px) 480px, 480px"
-              loading="lazy"
               priority={false}
+              quality={85}
               onLoad={handleImageLoad}
               onError={handleImageError}
             />
@@ -379,10 +382,16 @@ export const TrailerListItem = memo(function TrailerListItem({ trailer, onPrevie
   // Optimized responsive thumbnail URLs for list view with fallback handling
   const thumbnailUrls = useMemo(() => {
     const customerCode = process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE
-    if (!customerCode || !trailer.cf_video_uid) return null
+    if (!customerCode || !trailer.cf_video_uid) {
+      console.log('List view thumbnail URL generation failed:', { customerCode, cf_video_uid: trailer.cf_video_uid, trailer })
+      return null
+    }
     
+    // Use the correct Cloudflare Stream thumbnail URL format with video UID and timestamp
     const baseUrl = `https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg`
     const fallbackBaseUrl = `https://customer-${customerCode}.cloudflarestream.com/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg`
+    
+    console.log('Generated list view thumbnail URLs:', { baseUrl, fallbackBaseUrl, cf_video_uid: trailer.cf_video_uid })
     
     return {
       // Enhanced list view with fallback URLs
@@ -469,14 +478,14 @@ export const TrailerListItem = memo(function TrailerListItem({ trailer, onPrevie
           {/* Enhanced thumbnail rendering with fallback support */}
           <div className="relative w-56 aspect-[16/9] bg-muted rounded-xl overflow-hidden flex-shrink-0">
             {thumbnailUrl ? (
-              <Image
+              <OptimizedImage
                 src={thumbnailUrl}
                 alt={`Thumbnail for ${trailer.title} video trailer`}
                 fill
                 className="object-cover transition-all duration-300 group-hover:scale-105"
                 sizes="280px"
-                loading="lazy"
                 priority={false}
+                quality={85}
                 onLoad={handleImageLoad}
                 onError={handleImageError}
               />

@@ -1,0 +1,56 @@
+# Docker Compose configuration with registry cache backend
+# For CI/CD and production environments with external cache
+# Usage: docker compose -f docker-compose.yml -f docker-compose.cache.yml up
+
+services:
+  # Frontend with registry cache
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+      # Registry cache configuration
+      cache_from:
+        - type=registry,ref=${DOCKER_REGISTRY:-ghcr.io}/${DOCKER_NAMESPACE:-neversatisfiedxo}/v0-trailer-web:cache
+        - type=registry,ref=${DOCKER_REGISTRY:-ghcr.io}/${DOCKER_NAMESPACE:-neversatisfiedxo}/v0-trailer-web:latest
+      cache_to:
+        - type=registry,ref=${DOCKER_REGISTRY:-ghcr.io}/${DOCKER_NAMESPACE:-neversatisfiedxo}/v0-trailer-web:cache,mode=max
+      # Build arguments for cache optimization
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+        BUILDKIT_MULTI_PLATFORM: 1
+      # Additional build settings for CI/CD
+      platforms:
+        - linux/amd64
+        - linux/arm64
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${DOCKER_NAMESPACE:-neversatisfiedxo}/v0-trailer-web:${TAG:-latest}
+
+  # MediaCMS with custom optimized build
+  mediacms:
+    build:
+      context: .
+      dockerfile: Dockerfile.mediacms
+      target: production
+      # Registry cache for MediaCMS
+      cache_from:
+        - type=registry,ref=${DOCKER_REGISTRY:-ghcr.io}/${DOCKER_NAMESPACE:-neversatisfiedxo}/v0-trailer-mediacms:cache
+        - type=registry,ref=${DOCKER_REGISTRY:-ghcr.io}/${DOCKER_NAMESPACE:-neversatisfiedxo}/v0-trailer-mediacms:latest
+      cache_to:
+        - type=registry,ref=${DOCKER_REGISTRY:-ghcr.io}/${DOCKER_NAMESPACE:-neversatisfiedxo}/v0-trailer-mediacms:cache,mode=max
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+      platforms:
+        - linux/amd64
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${DOCKER_NAMESPACE:-neversatisfiedxo}/v0-trailer-mediacms:${TAG:-latest}
+
+# Additional cache volumes for development
+volumes:
+  buildkit_cache:
+    external: true
+    name: buildkit_cache
+  npm_cache:
+    external: true  
+    name: npm_cache
+  pip_cache:
+    external: true
+    name: pip_cache

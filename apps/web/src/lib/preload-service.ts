@@ -259,6 +259,83 @@ export class PreloadService {
   }
 
   /**
+   * Smart preload based on user behavior
+   */
+  async smartPreload(userBehavior: {
+    currentPage: string
+    hoveredItems: string[]
+    scrollPosition: number
+    timeOnPage: number
+  }): Promise<void> {
+    if (!this.shouldPreload()) return
+
+    const { currentPage, hoveredItems, scrollPosition, timeOnPage } = userBehavior
+
+    // Preload hovered video pages
+    if (hoveredItems.length > 0) {
+      const videoPages = hoveredItems
+        .filter(item => item.startsWith('/video/'))
+        .slice(0, 3) // Limit to 3 concurrent preloads
+      
+      for (const page of videoPages) {
+        this.preloadPageData(page, { priority: 'high' })
+      }
+    }
+
+    // Preload next page if user has scrolled significantly
+    if (scrollPosition > 0.7 && timeOnPage > 5000) {
+      const nextPage = this.getNextPage(currentPage)
+      if (nextPage) {
+        this.preloadPageData(nextPage, { priority: 'low' })
+      }
+    }
+
+    // Preload related content based on current page
+    if (currentPage.startsWith('/video/')) {
+      const videoId = currentPage.split('/')[2]
+      this.preloadPageData(`/api/trailers/${videoId}/related`, { priority: 'low' })
+    }
+  }
+
+  /**
+   * Get next page based on current page
+   */
+  private getNextPage(currentPage: string): string | null {
+    // Implement pagination logic based on your app structure
+    if (currentPage === '/gallery') {
+      return '/gallery?page=2'
+    }
+    
+    if (currentPage.startsWith('/gallery?page=')) {
+      const currentPageNum = parseInt(currentPage.split('page=')[1]) || 1
+      return `/gallery?page=${currentPageNum + 1}`
+    }
+
+    return null
+  }
+
+  /**
+   * Preload critical resources on page load
+   */
+  async preloadCriticalResources(): Promise<void> {
+    if (!this.shouldPreload()) return
+
+    const criticalResources = [
+      '/api/trailers?limit=20',
+      '/api/health',
+      '/neversatisfiedxo-logo.png'
+    ]
+
+    for (const resource of criticalResources) {
+      if (resource.endsWith('.png') || resource.endsWith('.jpg')) {
+        this.preloadImages([resource], { priority: 'high' })
+      } else {
+        this.preloadPageData(resource, { priority: 'high' })
+      }
+    }
+  }
+
+  /**
    * Clear preload cache (useful for memory management)
    */
   clearCache() {

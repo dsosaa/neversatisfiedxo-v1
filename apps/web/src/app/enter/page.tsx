@@ -2,13 +2,12 @@
 
 import { useState } from 'react'
 import * as React from 'react'
-import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation' // No longer needed with direct redirect
 import { m } from '@/lib/motion'
 import { Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { SpadePasswordInput } from '@/components/ui/spade-password-input'
-import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { useVerifyPassword } from '@/lib/hooks'
 import { useBrowserDetection, getSafariSafeClasses, getBrowserSafeAnimations, getBrowserSafeBackdrop } from '@/lib/utils/browser-detection'
@@ -26,7 +25,7 @@ export default function EnterPage() {
   const [isSuccess, setIsSuccess] = useState(false)
   const [attemptCount, setAttemptCount] = useState(0)
   const [cooldownTime, setCooldownTime] = useState(0)
-  const router = useRouter()
+  // const router = useRouter() // No longer needed with direct redirect
   const verifyPassword = useVerifyPassword()
 
   // Browser detection with debug logging
@@ -70,24 +69,9 @@ export default function EnterPage() {
         toast.success('Access granted! Welcome to the gallery')
         console.log('🎉 Authentication successful, preparing redirect...')
         
-        // Delay navigation for success animation with fallback
-        setTimeout(() => {
-          console.log('🚀 Attempting router.push navigation...')
-          try {
-            router.push('/')
-          } catch (error) {
-            console.error('Router navigation failed, using window.location:', error)
-            window.location.href = '/'
-          }
-        }, 1200)
-        
-        // Backup redirect after 3 seconds if router.push fails
-        setTimeout(() => {
-          if (window.location.pathname === '/enter') {
-            console.log('🔄 Backup redirect triggered - router.push may have failed')
-            window.location.href = '/'
-          }
-        }, 3000)
+        // Force immediate redirect - no browser detection dependencies
+        console.log('🚀 Forcing immediate redirect...')
+        window.location.href = '/gallery'
       } else {
         const newAttemptCount = attemptCount + 1
         setAttemptCount(newAttemptCount)
@@ -246,7 +230,7 @@ export default function EnterPage() {
                   id="access-code"
                   placeholder="••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   disabled={verifyPassword.isPending || cooldownTime > 0 || isSuccess}
                   className={cn(
                     "h-12 text-center text-lg rounded-xl transition-all duration-200",
@@ -262,11 +246,11 @@ export default function EnterPage() {
                   showToggle={password.length > 0}
                 />
               ) : (
-                <PasswordInput
+                <SpadePasswordInput
                   id="access-code"
                   placeholder="••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   disabled={verifyPassword.isPending || cooldownTime > 0 || isSuccess}
                   className="h-12 text-center text-lg rounded-xl border-zinc-700 bg-zinc-900/70 text-zinc-100 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/30 transition-all duration-200 placeholder:text-zinc-500"
                   autoFocus
@@ -455,7 +439,7 @@ export default function EnterPage() {
                   id="access-code"
                   placeholder="••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   disabled={verifyPassword.isPending || cooldownTime > 0 || isSuccess}
                   className={cn(
                     "h-12 text-center text-lg rounded-xl transition-all duration-200",
@@ -471,11 +455,11 @@ export default function EnterPage() {
                   showToggle={password.length > 0}
                 />
               ) : (
-                <PasswordInput
+                <SpadePasswordInput
                   id="access-code"
                   placeholder="••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   disabled={verifyPassword.isPending || cooldownTime > 0 || isSuccess}
                   className="h-12 text-center text-lg rounded-xl border-zinc-700 bg-zinc-900/70 text-zinc-100 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/30 transition-all duration-200 placeholder:text-zinc-500"
                   autoFocus

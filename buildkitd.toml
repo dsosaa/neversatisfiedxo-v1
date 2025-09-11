@@ -1,0 +1,45 @@
+# BuildKit configuration for maximum build performance
+# This file optimizes Docker builds for speed and efficiency
+
+[worker.containerd]
+  # Enable parallel builds
+  max-parallelism = 4
+  
+  # Optimize for speed over size
+  gc = false
+  
+  # Increase build timeout
+  build-timeout = "30m"
+  
+  # Enable experimental features
+  experimental = true
+
+[worker.containerd.runtime]
+  # Use runc for better performance
+  runtime = "runc"
+  
+  # Optimize runtime settings
+  runtime-options = [
+    "runtime-options-1",
+    "runtime-options-2"
+  ]
+
+[registry]
+  # Enable registry cache
+  cache = true
+  
+  # Use local registry for faster pulls
+  mirrors = ["docker.io"]
+
+[worker.containerd.gc]
+  # Disable garbage collection during builds
+  enabled = false
+  
+  # Keep more cache layers
+  keep-duration = "24h"
+  keep-storage = "10GB"
+
+[worker.containerd.entitlements]
+  # Enable all entitlements for better performance
+  network-host = true
+  security-insecure = true

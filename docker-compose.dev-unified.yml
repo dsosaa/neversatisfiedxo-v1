@@ -1,0 +1,160 @@
+# Unified Development Docker Compose Configuration
+# This configuration is optimized for development with hot reloading
+# Usage: docker compose -f docker-compose.dev-unified.yml up -d
+
+
+services:
+  # PostgreSQL Database (Development)
+  postgres:
+    image: postgres:15-alpine
+    container_name: v0_trailer_postgres_dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mediacms}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-mediacms}
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mediacms} -d ${POSTGRES_DB:-mediacms}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  # Redis Cache (Development)
+  redis:
+    image: redis:7-alpine
+    container_name: v0_trailer_redis_dev
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data_dev:/data
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  # MediaCMS Backend (Official Image - Development)
+  mediacms:
+    image: mediacms/mediacms:latest
+    container_name: v0_trailer_mediacms_dev
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mediacms}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-mediacms}
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - ALLOWED_HOSTS=localhost,mediacms,videos.neversatisfiedxo.com,www.videos.neversatisfiedxo.com,web,${DOMAIN_NAME:-localhost}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://web:3000}
+      - DEBUG=${DJANGO_DEBUG:-True}
+      - EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+      - LOGGING_LEVEL=DEBUG
+      - CELERY_TASK_ALWAYS_EAGER=True
+      - CELERY_TASK_EAGER_PROPAGATES=True
+    volumes:
+      - mediacms_data_dev:/home/mediacms.io/mediacms/media_files
+      - mediacms_logs_dev:/home/mediacms.io/mediacms/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+
+  # Next.js Frontend (Development with Hot Reload)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web-optimized
+      target: development
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    container_name: v0_trailer_web_dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NEXT_PUBLIC_SITE_NAME=${NEXT_PUBLIC_SITE_NAME:-neversatisfiedxo}
+      - NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE=${NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}
+      - GATE_PASSWORD=${GATE_PASSWORD}
+      - MEDIACMS_BASE_URL=${MEDIACMS_BASE_URL:-http://mediacms:80}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+      - MEDIACMS_API_TOKEN=${MEDIACMS_API_TOKEN}
+      - CF_ACCOUNT_ID=${CF_ACCOUNT_ID}
+      - CF_STREAM_API_TOKEN=${CF_STREAM_API_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+      - NEXT_PUBLIC_DEBUG=true
+      - FAST_REFRESH=true
+      - WATCHPACK_POLLING=true
+    volumes:
+      # Bind mount for live code reloading
+      - ./apps/web:/app/web:cached
+      - ./data:/app/data:ro
+      # Named volumes for better performance
+      - web_node_modules_dev:/app/web/node_modules
+      - web_next_cache_dev:/app/web/.next
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mediacms:
+        condition: service_healthy
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+# Named volumes for development data persistence
+volumes:
+  postgres_data_dev:
+    driver: local
+  redis_data_dev:
+    driver: local
+  mediacms_data_dev:
+    driver: local
+  mediacms_logs_dev:
+    driver: local
+  web_node_modules_dev:
+    driver: local
+  web_next_cache_dev:
+    driver: local
+
+# Network configuration
+networks:
+  v0_trailer_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

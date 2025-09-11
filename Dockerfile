@@ -8,6 +8,7 @@ FROM base AS deps
 RUN apk add --no-cache \
     libc6-compat \
     dumb-init \
+    openssh-client \
     && apk upgrade --no-cache
 
 # Set working directory in web app context
@@ -16,8 +17,9 @@ WORKDIR /app/web
 # Copy package files for dependency installation (correct path)
 COPY apps/web/package*.json ./
 
-# Install production dependencies only
-RUN \
+# Install production dependencies with cache mounts for faster builds
+RUN --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,target=/root/.cache \
   if [ -f package-lock.json ]; then \
     npm ci --omit=dev --no-audit --no-fund; \
   else \
@@ -28,9 +30,11 @@ RUN \
 FROM base AS builder
 WORKDIR /app/web
 
-# Copy package files and install all dependencies (including dev)
+# Copy package files and install all dependencies with cache mounts
 COPY apps/web/package*.json ./
-RUN \
+RUN --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,target=/root/.cache \
+    --mount=type=cache,target=/.next/cache \
   if [ -f package-lock.json ]; then \
     npm ci --no-audit --no-fund; \
   else \
@@ -47,8 +51,11 @@ COPY data/ /app/data/
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Build the Next.js application in standalone mode
-RUN npm run build
+# Build the Next.js application with cache mounts for faster builds
+RUN --mount=type=cache,target=/app/web/.next/cache \
+    --mount=type=cache,target=/root/.cache \
+    --mount=type=cache,target=/tmp/tsbuildinfo \
+    npm run build
 
 # Production image optimized for runtime
 FROM base AS runner
@@ -77,6 +84,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/data ./data
 
 # Copy healthcheck script
 COPY --chown=nextjs:nodejs healthcheck.js ./
+
+# Create cache directories with proper permissions
+RUN mkdir -p /app/.next/cache/images && \
+    chown -R nextjs:nodejs /app/.next/cache
 
 # Switch to non-root user
 USER nextjs

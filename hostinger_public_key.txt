@@ -1,1 +1,0 @@
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPBakH+NQ4D4z8swDrUUBl3+D3fBUz+OT9Z6NWjtGeGP nsxofilms@gmail.com

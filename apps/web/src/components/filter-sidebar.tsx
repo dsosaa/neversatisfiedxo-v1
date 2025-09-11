@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { m, AnimatePresence } from '@/lib/motion'
-import { Filter, X, ChevronDown, DollarSign, Clock, Calendar, User } from 'lucide-react'
+import { X, ChevronDown, DollarSign, Clock, Calendar, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
@@ -113,7 +113,7 @@ export function FilterSidebar({
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-primary" />
+                  <span className="w-5 h-5 text-primary text-xl">♠</span>
                   <h2 className="text-lg font-bold">Filters</h2>
                 </div>
                 <Button

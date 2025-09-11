@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { GalleryProvider } from '@/components/gallery-provider'
+import { VideoDebug } from '@/components/video-debug'
 import { type Trailer } from '@/lib/types'
 import fs from 'fs'
 import path from 'path'
@@ -15,6 +16,9 @@ function loadTrailerDataDirect() {
       path.join(process.cwd(), '../../../data/VideoDB.csv'),
       path.join(process.cwd(), 'data/VideoDB.csv'),
       path.join(__dirname, '../../../../data/VideoDB.csv'),
+      '/opt/neversatisfiedxo/data/VideoDB.csv',
+      '/app/data/VideoDB.csv',
+      path.join(process.cwd(), 'data/VideoDB.csv'),
     ]
     
     let csvPath: string | null = null
@@ -188,6 +192,14 @@ export default async function HomePage() {
       <main className="px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20 py-8 w-full max-w-screen-2xl mx-auto">
         <GalleryProvider initialData={initialData} />
       </main>
+
+      {/* Debug Component - Remove in production */}
+      {process.env.NODE_ENV === 'development' && initialData.results.length > 0 && (
+        <VideoDebug 
+          videoId={initialData.results[0].cf_video_uid} 
+          customerCode={process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}
+        />
+      )}
     </div>
   )
 }
