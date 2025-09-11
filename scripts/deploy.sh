@@ -121,8 +121,6 @@ EOF
         
         log_warn "⚠️  IMPORTANT: Update .env file with secure passwords and keys!"
         log_warn "   Edit: $APP_DIR/.env"
-    else
-        log_info "✓ .env file exists"
     fi
     
     # Set proper permissions
