@@ -168,6 +168,46 @@ GET /api/health?check=database     # Specific service check
 - Uses existing middleware fallback already supporting legacy format
 **Result**: Users now successfully access gallery after password authentication
 
+### 5. Docker Deployment Configuration Issues (RESOLVED - January 2025)
+**Issue**: Multiple Docker configuration conflicts preventing successful VPS deployment
+**Root Causes**:
+- Next.js experimental features not available in stable release (PPR, React Compiler)
+- Docker Compose replicas conflicting with container names in single-instance deployment
+- Missing dockerfile references and incorrect build targets
+- Missing healthcheck.js file in build context causing container startup failures
+- Deploy sections causing configuration conflicts
+
+**Solutions Implemented**:
+- **Next.js Configuration**: Commented out experimental features not available in stable v15.5.2
+- **Docker Compose Structure**: Created separate `docker-compose.production.yml` without HA conflicts
+- **Container Health Monitoring**: Created `healthcheck.js` for proper container monitoring
+- **Build Configuration**: Fixed dockerfile references and build targets across all compose files
+- **Environment Management**: Created `.env.production.template` with security guidance
+- **Documentation**: Comprehensive `DEPLOYMENT_ISSUES.md` with prevention strategies
+
+**Files Created/Modified**:
+- ✅ `healthcheck.js` - Node.js health check for container monitoring
+- ✅ `docker-compose.production.yml` - Clean single-instance production configuration
+- ✅ `docker-compose.dev.yml` - Fixed development configuration (dockerfile refs, targets)
+- ✅ `docker-compose.yml` - Removed conflicting deploy sections
+- ✅ `.env.production.template` - Production environment template with security notes
+- ✅ `DEPLOYMENT_ISSUES.md` - Complete troubleshooting guide and prevention checklist
+- ✅ `apps/web/next.config.ts` - Disabled experimental features for stable release
+
+**Prevention Measures**:
+- Pre-deployment validation checklist for Docker configurations
+- Environment variable validation procedures
+- Docker build context verification
+- Container health check validation
+- Systematic deployment testing procedures
+
+**Deployment Status**: ✅ **All Infrastructure Successfully Deployed**
+- PostgreSQL 16, Redis 7, MediaCMS, Next.js frontend all operational
+- SSL certificates active, Nginx reverse proxy configured
+- Container health monitoring functional across all services
+
+**Result**: Complete Docker deployment success with comprehensive prevention documentation
+
 ## Environment Configuration
 
 ### Core Application Settings

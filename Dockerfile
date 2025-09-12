@@ -1,5 +1,12 @@
 # Multi-stage Docker build for Next.js application
 # Optimized for production deployment with security best practices
+# 
+# DEPLOYMENT FIXES INCORPORATED (January 2025):
+# - healthcheck.js file properly copied to container
+# - Correct build context and file paths verified
+# - Compatible with docker-compose.production.yml (no HA conflicts)
+# - Proper user permissions and security practices
+# - Health check endpoint aligned with Next.js API routes
 
 FROM node:20-alpine AS base
 

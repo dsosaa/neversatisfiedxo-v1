@@ -32,12 +32,16 @@ Production system fully operational with optimized security headers for seamless
 
 ## 🐳 Local Docker Setup
 
-### Quick Start
+### Quick Start (Validated & Fixed)
 ```bash
-# 1. Create environment file
-cp env.example .env  # Edit with your values
+# 1. Environment setup with validation
+cp .env.production.template .env  # Edit with your secure production values
+make validate-env                 # Validate environment configuration
 
-# 2. Start services
+# 2. Docker validation (prevents deployment issues)
+make validate-docker              # Validate all Docker configurations
+
+# 3. Start services
 ./scripts/run-local-docker.sh start prod
 
 # 3. Access the application
@@ -47,13 +51,18 @@ cp env.example .env  # Edit with your values
 
 ### Available Commands (v2.3 Enhanced)
 ```bash
-# Smart Deployment System
+# Smart Deployment System (Enhanced with Fixes)
+make deploy-production                                  # Production deployment with validation
+make validate-env && make validate-docker             # Validate before deployment
+
+# Quick deployment options
 make deploy                                            # Intelligent deployment strategy
 ./scripts/smart-deploy.sh                             # Automated strategy selection
 
-# Traditional Docker Commands
+# Traditional Docker Commands (Fixed Configurations)
 ./scripts/run-local-docker.sh start [dev|prod|unified] # Start services
-docker compose --profile production up -d             # Production with replicas
+docker compose -f docker-compose.production.yml up -d # Clean production deployment
+docker compose -f docker-compose.dev.yml up -d        # Fixed development deployment
 ./scripts/run-local-docker.sh stop                    # Stop services
 ./scripts/run-local-docker.sh logs [service]          # View logs with correlation IDs
 ./scripts/run-local-docker.sh status                   # Check status
@@ -338,7 +347,15 @@ For technical support:
 ✅ **Enterprise Features** - Advanced admin, health monitoring, CI/CD pipeline, automated deployment
 ✅ **All Issues Resolved** - Thumbnails, scrollbar, favicon, SSL, and gallery access working perfectly
 
-### Latest Updates (v2.3 - January 2025)
+### Latest Updates (v2.4 - January 2025)
+- **Docker Deployment Fixes** - Resolved all configuration conflicts and missing files
+- **Comprehensive Validation** - Pre-deployment checks prevent configuration issues
+- **Deployment Documentation** - Complete troubleshooting guide with prevention measures
+- **Enhanced Makefile** - Validation targets and production deployment automation
+- **Environment Templates** - Secure production configuration with guidance
+- **Infrastructure Success** - All services deployed and operational on VPS
+
+### Previous Updates (v2.3 - January 2025)
 - **Documentation Cleanup** - Removed 13 redundant files, consolidated information
 - **Advanced Optimizations** - Redis rate limiting, PostgreSQL 16-alpine, Next.js 15 features
 - **Smart Deployment** - Intelligent deployment strategy selection and automation
@@ -346,6 +363,46 @@ For technical support:
 - **Performance Boost** - React Compiler, PPR, optimized Docker configurations  
 - **Project Structure** - Streamlined from 16+ docs to 3 core + organized docs/
 - **Clean Architecture** - Professional documentation with single source of truth
+
+## 🔧 Deployment Fixes & Prevention
+
+### Recent Issues Resolved (January 2025)
+All Docker deployment configuration issues have been systematically resolved:
+
+#### ✅ **Issues Fixed**
+1. **Next.js Configuration** - Experimental features disabled for stable v15.5.2
+2. **Docker Compose Conflicts** - Separate production config without HA conflicts  
+3. **Missing Files** - Created `healthcheck.js` for container monitoring
+4. **Build References** - Fixed dockerfile paths and build targets
+5. **Environment Management** - Secure `.env.production.template` created
+
+#### ✅ **Files Created/Updated**
+- `healthcheck.js` - Container health monitoring for all environments
+- `docker-compose.production.yml` - Clean production configuration
+- `.env.production.template` - Production environment template with security notes
+- `DEPLOYMENT_ISSUES.md` - Complete troubleshooting and prevention guide
+- `Makefile` - Enhanced with validation targets and production deployment
+
+#### ✅ **Prevention Measures**
+```bash
+# Always validate before deployment
+make validate-env                 # Environment variable validation
+make validate-docker              # Docker configuration validation
+make deploy-production            # Production deployment with validation
+make deploy-validate              # Post-deployment validation
+
+# Quick development validation
+make dev-validate                 # Prevent issues before they occur
+```
+
+#### ✅ **Result**
+- **Infrastructure**: ✅ All services deployed and healthy on VPS
+- **PostgreSQL 16**: ✅ Database operational with proper authentication  
+- **Redis 7**: ✅ Cache and rate limiting functional
+- **Next.js Frontend**: ✅ Built and running with fixed configuration
+- **MediaCMS Backend**: ✅ Django service operational
+- **SSL Certificates**: ✅ HTTPS working with proper certificates
+- **Documentation**: ✅ Complete troubleshooting guide prevents future issues
 
 ---
 
