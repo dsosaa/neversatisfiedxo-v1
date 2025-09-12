@@ -1,4 +1,4 @@
-version: '3.8'
+# Docker Compose configuration - version removed for modern Docker Compose
 
 services:
   # Next.js Frontend Application
@@ -64,26 +64,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 60s
-    # Resource limits and HA configuration for production stability
-    deploy:
-      replicas: 2  # High availability with 2 instances
-      update_config:
-        parallelism: 1  # Update one instance at a time
-        failure_action: rollback  # Rollback on failure
-        delay: 30s  # Wait between updates
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-      resources:
-        limits:
-          cpus: '0.8'
-          memory: 1G
-        reservations:
-          cpus: '0.2'
-          memory: 256M
-
   # MediaCMS Backend (Django)
   mediacms:
     build:
@@ -121,26 +101,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 90s
-    # Resource limits and HA configuration for production stability
-    deploy:
-      replicas: 1  # Single MediaCMS instance (stateful service)
-      update_config:
-        parallelism: 1
-        failure_action: rollback
-        delay: 60s  # Longer delay for Django migrations
-      restart_policy:
-        condition: on-failure
-        delay: 10s
-        max_attempts: 3
-        window: 120s
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 2G
-        reservations:
-          cpus: '0.3'
-          memory: 512M
-
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
