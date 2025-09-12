@@ -8,24 +8,37 @@ const nextConfig: NextConfig = {
   // Enable standalone output for Docker deployment
   output: 'standalone',
 
-  // Security headers for production only
+  // Security headers - Optimized for video streaming compatibility
   async headers() {
-    // Skip security headers in development for Safari compatibility
-    if (process.env.NODE_ENV === 'development') {
-      return [];
-    }
-    
     return [
       {
-        // Apply security headers to all routes
-        source: '/(.*)',
+        // Static assets - long-term caching
+        source: '/_next/static/(.*)',
         headers: [
-          // Content Security Policy - Now handled by middleware with nonces
-          // Removed static CSP to prevent conflicts with dynamic nonce-based CSP
-          // Cache Control for static assets
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      },
+      {
+        // API routes - no caching
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'private, no-cache, no-store, must-revalidate'
+          }
+        ]
+      },
+      {
+        // All other routes - balanced security headers
+        source: '/(.*)',
+        headers: [
+          // Dynamic cache control for pages
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, stale-while-revalidate=86400'
           },
           // Enable compression hint
           {
@@ -42,10 +55,10 @@ const nextConfig: NextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff'
           },
-          // Prevents clickjacking attacks
+          // Allow same-origin framing for video compatibility
           {
             key: 'X-Frame-Options',
-            value: 'DENY'
+            value: 'SAMEORIGIN'
           },
           // Controls referrer information
           {
@@ -62,11 +75,11 @@ const nextConfig: NextConfig = {
             key: 'X-DNS-Prefetch-Control',
             value: 'off'
           },
-          // Controls browser features
+          // Optimized permissions for video streaming
           {
             key: 'Permissions-Policy',
             value: [
-              'camera=()',
+              'camera=(self)',
               'microphone=()',
               'geolocation=()',
               'browsing-topics=()'
@@ -107,7 +120,7 @@ const nextConfig: NextConfig = {
     // Enhanced image optimization
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 31536000, // 1 year
+    minimumCacheTTL: 3600, // 1 hour for faster deployments
     unoptimized: false,
     loader: 'default',
     // Enable placeholder blur
@@ -115,7 +128,7 @@ const nextConfig: NextConfig = {
     // blurDataURL: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=',
   },
 
-  // Performance optimizations
+  // Performance optimizations with Next.js 15 advanced features
   experimental: {
     optimizePackageImports: [
       '@radix-ui/react-dialog',
@@ -151,8 +164,13 @@ const nextConfig: NextConfig = {
       dynamic: 30, // 30 seconds for dynamic pages
       static: 180, // 3 minutes for static pages
     },
+    // Next.js 15 stable features (experimental features disabled for stable release)
+    // ppr: true, // Partial Prerendering - requires canary version
+    // reactCompiler: true, // React 19 compiler - requires canary version
+    // cacheComponents: true, // Enhanced component caching - requires canary version
+    // Existing optimizations
     typedEnv: true, // Enable typed environment variables
-    browserDebugInfoInTerminal: true, // Enable Safari debug info forwarding
+    browserDebugInfoInTerminal: true, // Enable browser debug info forwarding
     optimizeCss: true, // Enable CSS optimization
     optimizeServerReact: true, // Optimize server-side React
     // Build cache optimization

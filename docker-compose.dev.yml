@@ -1,6 +1,6 @@
 # Development Docker Compose configuration for faster development
-# Usage: docker compose -f docker-compose.dev.yml up
-# For production: docker compose up
+# Usage: make dev OR docker compose -f docker-compose.dev.yml up
+# For production: make deploy OR docker compose --profile production up
 
 services:
   # Next.js Frontend Application (Development Mode)

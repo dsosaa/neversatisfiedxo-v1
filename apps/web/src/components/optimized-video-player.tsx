@@ -473,7 +473,7 @@ export function getOptimalVideoSettings() {
     };
   }
 
-  const connection = (navigator as any).connection;
+  const connection = (navigator as unknown as { connection?: { effectiveType: string; downlink: number } }).connection;
   const isMobile = window.innerWidth < 768;
   const isTablet = window.innerWidth < 1024;
   

@@ -191,7 +191,7 @@ async function checkMediaCMS() {
       responseTime,
       lastCheck: new Date().toISOString(),
     };
-  } catch (error) {
+  } catch {
     return {
       status: 'disconnected' as const,
       responseTime: 0,
@@ -208,7 +208,7 @@ async function checkDatabase() {
       status: 'connected' as const,
       lastCheck: new Date().toISOString(),
     };
-  } catch (error) {
+  } catch {
     return {
       status: 'disconnected' as const,
       lastCheck: new Date().toISOString(),
@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to record metric' }, { status: 400 });
   }
 }

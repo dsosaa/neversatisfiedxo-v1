@@ -43,6 +43,9 @@ services:
       
       # Monitoring and performance
       - MONITORING_WEBHOOK_URL=${MONITORING_WEBHOOK_URL}
+      
+      # Redis configuration for production rate limiting
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
     volumes:
       - web_data:/app/.next/cache
       - ./data:/app/data
@@ -61,8 +64,18 @@ services:
       timeout: 5s
       retries: 3
       start_period: 60s
-    # Resource limits for production stability (adjusted for single CPU server)
+    # Resource limits and HA configuration for production stability
     deploy:
+      replicas: 2  # High availability with 2 instances
+      update_config:
+        parallelism: 1  # Update one instance at a time
+        failure_action: rollback  # Rollback on failure
+        delay: 30s  # Wait between updates
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           cpus: '0.8'
@@ -108,8 +121,18 @@ services:
       timeout: 5s
       retries: 3
       start_period: 90s
-    # Resource limits for production stability
+    # Resource limits and HA configuration for production stability
     deploy:
+      replicas: 1  # Single MediaCMS instance (stateful service)
+      update_config:
+        parallelism: 1
+        failure_action: rollback
+        delay: 60s  # Longer delay for Django migrations
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           cpus: '1.0'
@@ -120,7 +143,7 @@ services:
 
   # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: v0_trailer_postgres
     restart: unless-stopped
     environment:

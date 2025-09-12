@@ -212,54 +212,10 @@
   }
 }
 
-/* Safari-specific CSS custom property fallbacks */
-@supports not (color: hsl(var(--background))) {
-  .dark {
-    /* Fallback colors for Safari if CSS custom properties fail */
-    --background: rgb(9, 9, 11);
-    --foreground: rgb(212, 212, 216);
-    --primary: rgb(56, 189, 248);
-    --primary-foreground: rgb(248, 250, 252);
-    --secondary: rgb(39, 39, 42);
-    --secondary-foreground: rgb(212, 212, 216);
-    --muted: rgb(24, 24, 27);
-    --muted-foreground: rgb(113, 113, 122);
-    --accent: rgb(232, 121, 249);
-    --accent-foreground: rgb(24, 24, 27);
-    --border: rgb(63, 63, 70);
-    --input: rgb(24, 24, 27);
-    --ring: rgb(56, 189, 248);
-  }
-}
 
-/* Safari-specific backdrop-filter fallbacks */
-@supports not (backdrop-filter: blur(12px)) {
-  .glass {
-    background: rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: none !important;
-  }
-  
-  .glass-dark {
-    background: rgba(0, 0, 0, 0.3) !important;
-    backdrop-filter: none !important;
-  }
-}
 
-/* Safari animation performance optimizations */
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-  /* Safari-specific styles */
-  .shimmer::before {
-    animation: shimmer 3s ease-in-out infinite; /* Slower animation for Safari */
-  }
-  
-  /* Disable complex animations on Safari if needed */
-  .safari-simplified * {
-    animation-duration: 0.2s !important;
-    transition-duration: 0.2s !important;
-  }
-}
 
-/* High contrast support for Safari */
+/* High contrast support */
 @media (prefers-contrast: high) {
   .dark {
     --background: rgb(0, 0, 0);

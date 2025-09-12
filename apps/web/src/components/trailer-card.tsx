@@ -407,7 +407,7 @@ export const TrailerListItem = memo(function TrailerListItem({ trailer, onPrevie
         large: `${fallbackBaseUrl}?width=840&height=473&quality=95&fit=crop&format=webp`
       }
     }
-  }, [trailer.cf_video_uid])
+  }, [trailer])
   
   // Enhanced image loading with fallback and retry logic - restored for consistency with grid view
   const {

@@ -9,6 +9,10 @@ export default {
     './src/app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
+  // Tailwind CSS performance optimizations
+  future: {
+    hoverOnlyWhenSupported: true, // Only apply hover styles on devices that support it
+  },
   theme: {
     container: {
       center: true,
@@ -92,10 +96,6 @@ export default {
         'fade-out': 'fade-out 0.2s ease-in',
         'scale-in': 'scale-in 0.2s ease-out',
         'scale-out': 'scale-out 0.2s ease-in',
-        // Safari-safe animations
-        'safari-fade': 'safari-fade 0.3s ease-out',
-        'safari-slide': 'safari-slide 0.3s ease-out',
-        'safari-gentle-pulse': 'safari-gentle-pulse 2s ease-in-out infinite',
       },
       keyframes: {
         // Premium trailer animations
@@ -179,25 +179,6 @@ export default {
         'scale-out': {
           '0%': { opacity: '1', transform: 'scale(1)' },
           '100%': { opacity: '0', transform: 'scale(0.9)' }
-        },
-        // Safari-safe keyframes
-        'safari-fade': {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' }
-        },
-        'safari-slide': {
-          '0%': { 
-            opacity: '0',
-            transform: 'translateY(10px)'
-          },
-          '100%': { 
-            opacity: '1',
-            transform: 'translateY(0)'
-          }
-        },
-        'safari-gentle-pulse': {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.8' }
         }
       },
       // Premium spacing system
@@ -291,36 +272,6 @@ export default {
         '.grid-auto-rows-fr': {
           'grid-auto-rows': '1fr'
         },
-        // Safari-safe utilities for progressive enhancement
-        '.glass-safari': {
-          background: 'rgba(0, 0, 0, 0.4)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        },
-        '.glass-safari-light': {
-          background: 'rgba(255, 255, 255, 0.1)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-        },
-        '.backdrop-fallback': {
-          background: 'rgba(0, 0, 0, 0.8)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        },
-        '.animate-safari-safe': {
-          transition: 'all 0.2s ease-out',
-        },
-        '.hover-safari-safe:hover': {
-          opacity: '0.9',
-          transform: 'translateY(-1px)',
-        },
-        '.transform-safari-safe': {
-          willChange: 'auto',
-          transformStyle: 'flat',
-        },
-        '.shadow-safari': {
-          boxShadow: '0 4px 12px -2px rgba(0, 0, 0, 0.3)',
-        },
-        '.shadow-safari-lg': {
-          boxShadow: '0 8px 24px -4px rgba(0, 0, 0, 0.4)',
-        }
       }
       addUtilities(newUtilities)
     }

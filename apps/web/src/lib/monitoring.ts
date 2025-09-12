@@ -9,7 +9,7 @@ interface ErrorLog {
   userAgent: string;
   userId?: string;
   sessionId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface PerformanceMetric {
@@ -19,7 +19,7 @@ interface PerformanceMetric {
   name: string;
   duration: number;
   url: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class MonitoringService {
@@ -228,7 +228,7 @@ class MonitoringService {
   }
 
   // Send data to monitoring endpoint
-  private async sendToMonitoring(type: 'error' | 'metric', data: any) {
+  private async sendToMonitoring(type: 'error' | 'metric', data: unknown) {
     try {
       await fetch('/api/monitoring', {
         method: 'POST',

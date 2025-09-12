@@ -1,7 +1,7 @@
-// Service Worker for aggressive caching
-const CACHE_NAME = 'v0-trailer-v1.0.0'
-const STATIC_CACHE = 'static-v1.0.0'
-const DYNAMIC_CACHE = 'dynamic-v1.0.0'
+// Service Worker for reasonable caching
+const _CACHE_NAME = `v0-trailer-${Date.now()}`
+const STATIC_CACHE = `static-${Date.now()}`
+const DYNAMIC_CACHE = `dynamic-${Date.now()}`
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -122,11 +122,27 @@ async function handleRequest(request) {
   }
 }
 
-// Cache First strategy
+// Cache First strategy - reduced caching time
 async function cacheFirst(request, cacheName) {
   const cachedResponse = await caches.match(request)
   if (cachedResponse) {
-    return cachedResponse
+    // Check if cached response is older than 1 hour
+    const cachedDate = cachedResponse.headers.get('date')
+    if (cachedDate) {
+      const cacheTime = new Date(cachedDate).getTime()
+      const now = Date.now()
+      const oneHour = 60 * 60 * 1000
+      
+      if (now - cacheTime > oneHour) {
+        // Cache is stale, delete and fetch fresh
+        const cache = await caches.open(cacheName)
+        await cache.delete(request)
+      } else {
+        return cachedResponse
+      }
+    } else {
+      return cachedResponse
+    }
   }
   
   const networkResponse = await fetch(request)
@@ -162,7 +178,7 @@ async function networkFirst(request, cacheName) {
       cache.put(request, networkResponse.clone())
     }
     return networkResponse
-  } catch (error) {
+  } catch {
     const cachedResponse = await caches.match(request)
     return cachedResponse || new Response('Offline', { status: 503 })
   }

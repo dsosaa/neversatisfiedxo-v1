@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, memo } from 'react'
 import type { CloudflarePlayerProps } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { useBrowserDetection } from '@/lib/utils/browser-detection'
+// Browser detection removed in v2.3 for unified cross-browser experience
 
 export const CloudflarePlayer = memo(function CloudflarePlayer({
   uid,
@@ -14,7 +14,7 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
 }: CloudflarePlayerProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
-  const browserInfo = useBrowserDetection()
+  // Unified browser experience - no browser detection needed
 
   const customerCode = useMemo(() => process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE, [])
 
@@ -48,27 +48,14 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
       params.append('customerCode', customerCode)
     }
     
-    // Safari-specific optimizations for better video performance
-    if (browserInfo.isSafari) {
-      // Conservative preloading for Safari performance
-      params.set('preload', 'none')
-      
-      // Disable autoplay on Safari due to strict policies unless explicitly supported
-      if (!browserInfo.supportsVideoAutoplay && autoplay) {
-        params.delete('autoplay')
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('🎥 Safari: Autoplay disabled due to browser policy. User interaction required.')
-        }
-      }
-      
-      // Explicit quality settings for Safari optimization
-      params.append('quality', 'auto')
-      params.append('speed', '1')
-    }
+    // Unified cross-browser optimizations - works consistently across all browsers
+    params.set('preload', 'metadata') // Standard preloading for all browsers
+    params.append('quality', 'auto')
+    params.append('speed', '1')
     
     const queryString = params.toString()
     return `${baseUrl}${queryString ? `?${queryString}` : ''}`
-  }, [uid, autoplay, muted, poster, customerCode, browserInfo.isSafari, browserInfo.supportsVideoAutoplay])
+  }, [uid, autoplay, muted, poster, customerCode])
 
   // Alternative: Direct video source URLs for manual quality selection (unused for now)
   // const directVideoUrls = useMemo(() => {
@@ -84,26 +71,24 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
     setIsLoading(false)
     setHasError(false)
     
-    // Safari-specific video optimization logging
-    if (process.env.NODE_ENV === 'development' && browserInfo.isSafari) {
-      console.log('🎥 Safari video loaded successfully:', uid)
+    // Unified video optimization logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🎥 Video loaded successfully:', uid)
     }
-  }, [browserInfo.isSafari, uid])
+  }, [uid])
 
   const handleError = useCallback(() => {
     setIsLoading(false)
     setHasError(true)
     
-    // Enhanced error logging for Safari debugging
+    // Enhanced error logging for development
     if (process.env.NODE_ENV === 'development') {
       console.error('🎥 Video error:', {
         uid,
-        browser: browserInfo.isSafari ? 'Safari' : 'Other',
-        supportsVideoAutoplay: browserInfo.supportsVideoAutoplay,
-        userAgent: browserInfo.userAgent?.substring(0, 50) + '...'
+        streamUrl
       })
     }
-  }, [uid, browserInfo.isSafari, browserInfo.supportsVideoAutoplay, browserInfo.userAgent])
+  }, [uid, streamUrl])
 
   const handleRetry = useCallback(() => {
     setHasError(false)
@@ -168,10 +153,7 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
         src={streamUrl}
         title="Video Player"
         className="w-full h-full border-0 rounded-2xl"
-        allow={browserInfo.isSafari 
-          ? "accelerometer; gyroscope; encrypted-media; picture-in-picture; fullscreen" 
-          : "accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
-        }
+        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
         allowFullScreen
         onLoad={handleLoad}
         onError={handleError}

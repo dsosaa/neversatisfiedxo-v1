@@ -9,8 +9,13 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useTrailer, useRelatedTrailers, usePrefetchTrailer } from '@/lib/hooks'
 import { formatPrice, parseLength, formatLength, parsePrice } from '@/lib/api'
-import { useBrowserDetection, getBrowserSafeBackdrop } from '@/lib/utils/browser-detection'
 import { cn } from '@/lib/utils'
+
+// Unified backdrop utility for all browsers (replaces getBrowserSafeBackdrop)
+const getUnifiedBackdrop = (classes: string) => {
+  // Return unified CSS classes - works consistently across all browsers
+  return classes
+}
 import Link from 'next/link'
 
 // Lazy load heavy components to reduce initial bundle size
@@ -33,15 +38,15 @@ const TrailerCardSkeleton = lazy(() => import('@/components/trailer-card').then(
 export default function VideoDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const browserInfo = useBrowserDetection()
+  // Unified browser experience - no browser detection needed
   const [showStickyPlayer, setShowStickyPlayer] = useState(false)
   const mainPlayerRef = useRef<HTMLDivElement>(null)
   const prefetchTrailer = usePrefetchTrailer()
 
   const videoId = params.id as string
   
-  // Progressive enhancement based on browser capabilities
-  const shouldUseAdvancedAnimations = browserInfo.supportsComplexAnimations && !browserInfo.prefersSafeAnimations
+  // Unified animation support for all browsers
+  const shouldUseAdvancedAnimations = true
   
   const { data: trailer, isLoading, error } = useTrailer(videoId)
   const { data: relatedTrailers, isLoading: relatedLoading } = useRelatedTrailers(trailer || null)
@@ -117,9 +122,8 @@ export default function VideoDetailPage() {
       {/* Header with Safari-aware backdrop effects */}
       <header className={cn(
         "border-b border-border sticky top-0 z-40",
-        getBrowserSafeBackdrop(
-          "backdrop-blur-sm bg-background/80",
-          browserInfo
+        getUnifiedBackdrop(
+          "backdrop-blur-sm bg-background/80"
         )
       )}>
         <div className="container mx-auto px-4 py-4">
@@ -488,9 +492,8 @@ export default function VideoDetailPage() {
                 {trailer.description && (
                   <Card className={cn(
                     "border-slate-700/50 shadow-xl",
-                    getBrowserSafeBackdrop(
-                      "bg-slate-900/40 backdrop-blur-sm",
-                      browserInfo
+                    getUnifiedBackdrop(
+                      "bg-slate-900/40 backdrop-blur-sm"
                     )
                   )}>
                     <CardContent className="p-8">
@@ -515,9 +518,8 @@ export default function VideoDetailPage() {
                 {trailer.detailed_description && trailer.detailed_description !== trailer.description && (
                   <Card className={cn(
                     "border-slate-700/50 shadow-xl",
-                    getBrowserSafeBackdrop(
-                      "bg-slate-900/40 backdrop-blur-sm",
-                      browserInfo
+                    getUnifiedBackdrop(
+                      "bg-slate-900/40 backdrop-blur-sm"
                     )
                   )}>
                     <CardContent className="p-8">
@@ -541,9 +543,8 @@ export default function VideoDetailPage() {
                 {/* Enhanced Video Information */}
                 <Card className={cn(
                   "border-slate-700/50 shadow-xl",
-                  getBrowserSafeBackdrop(
-                    "bg-slate-900/40 backdrop-blur-sm",
-                    browserInfo
+                  getUnifiedBackdrop(
+                    "bg-slate-900/40 backdrop-blur-sm"
                   )
                 )}>
                   <CardContent className="p-8">
@@ -622,9 +623,8 @@ export default function VideoDetailPage() {
                 {trailer.description && (
                   <Card className={cn(
                     "border-slate-700/50 shadow-xl",
-                    getBrowserSafeBackdrop(
-                      "bg-slate-900/40 backdrop-blur-sm",
-                      browserInfo
+                    getUnifiedBackdrop(
+                      "bg-slate-900/40 backdrop-blur-sm"
                     )
                   )}>
                     <CardContent className="p-8">
@@ -649,9 +649,8 @@ export default function VideoDetailPage() {
                 {trailer.detailed_description && trailer.detailed_description !== trailer.description && (
                   <Card className={cn(
                     "border-slate-700/50 shadow-xl",
-                    getBrowserSafeBackdrop(
-                      "bg-slate-900/40 backdrop-blur-sm",
-                      browserInfo
+                    getUnifiedBackdrop(
+                      "bg-slate-900/40 backdrop-blur-sm"
                     )
                   )}>
                     <CardContent className="p-8">
@@ -675,9 +674,8 @@ export default function VideoDetailPage() {
                 {/* Enhanced Video Information - Safari fallback */}
                 <Card className={cn(
                   "border-slate-700/50 shadow-xl",
-                  getBrowserSafeBackdrop(
-                    "bg-slate-900/40 backdrop-blur-sm",
-                    browserInfo
+                  getUnifiedBackdrop(
+                    "bg-slate-900/40 backdrop-blur-sm"
                   )
                 )}>
                   <CardContent className="p-8">
@@ -847,9 +845,8 @@ export default function VideoDetailPage() {
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className={cn(
                 "fixed bottom-0 left-0 right-0 border-t border-border z-50",
-                getBrowserSafeBackdrop(
-                  "bg-background/95 backdrop-blur-md",
-                  browserInfo
+                getUnifiedBackdrop(
+                  "bg-background/95 backdrop-blur-md"
                 )
               )}
             >
@@ -901,9 +898,8 @@ export default function VideoDetailPage() {
           ) : (
             <div className={cn(
               "fixed bottom-0 left-0 right-0 border-t border-border z-50 opacity-100",
-              getBrowserSafeBackdrop(
-                "bg-background/95 backdrop-blur-md",
-                browserInfo
+              getUnifiedBackdrop(
+                "bg-background/95 backdrop-blur-md"
               )
             )}>
               <div className="container mx-auto px-4 py-3">
