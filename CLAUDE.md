@@ -43,10 +43,12 @@
 
 ### Infrastructure & DevOps
 - **Docker Compose**: Multi-container orchestration with production profiles
+- **Nginx Reverse Proxy**: Modern SSL/TLS configuration with Let's Encrypt integration
 - **Health Monitoring**: Comprehensive health checks and error reporting
 - **Security Hardening**: CSP headers, rate limiting, vulnerability scanning
 - **Performance Monitoring**: Core Web Vitals, Lighthouse CI, bundle analysis
 - **CI/CD Pipeline**: Automated testing, security checks, and deployment validation
+- **Domain Management**: Complete SSL certificate automation and domain routing
 
 ## Development Workflow
 
@@ -703,6 +705,26 @@ docker compose ps
 
 ## Production Deployment Strategy
 
+### 🌐 **Complete Deployment with Nginx & SSL**
+
+**For new deployments or nginx setup**:
+```bash
+# Complete deployment including nginx configuration and SSL certificates
+make deploy-complete
+
+# Or step-by-step approach:
+make setup-nginx     # Setup nginx and SSL certificates  
+make test-website    # Validate complete functionality
+```
+
+**Nginx & SSL Management**:
+```bash
+make nginx-status    # Check nginx service status
+make nginx-logs      # View nginx error logs
+make ssl-status      # Check SSL certificate status
+make ssl-renew       # Test certificate renewal
+```
+
 ### 🚀 **Deployment Decision Matrix**
 
 Choose the right deployment strategy based on your changes:
@@ -779,6 +801,8 @@ make deploy DOMAIN=videos.neversatisfiedxo.com
 | **Build** | Dockerfile, build scripts | Container Rebuild | 10min | Medium |
 | **Database** | Model changes, migrations | Fresh Deployment | 20min | High |
 | **Infrastructure** | New services, SSL updates | Fresh Deployment | 30min | High |
+| **Nginx/SSL** | Domain setup, SSL certificates | Complete Deployment | 15min | Medium |
+| **First Deploy** | Initial VPS deployment | Complete Deployment | 20min | Medium |
 
 ### 🔄 **Automated Decision Script**
 

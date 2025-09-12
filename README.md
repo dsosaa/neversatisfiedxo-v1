@@ -229,14 +229,33 @@ https://iframe.videodelivery.net/{cf_video_uid}
 
 ## 🚀 Deployment
 
-### Frontend (Vercel/Netlify)
+### Complete Production Deployment (Recommended)
+```bash
+# One-command deployment with nginx and SSL
+make deploy-complete
+
+# Or step-by-step:
+make setup-nginx     # Setup nginx and SSL certificates
+make test-website    # Validate complete functionality
+```
+
+### Nginx & SSL Management
+```bash
+make nginx-status    # Check nginx service status
+make nginx-logs      # View nginx error logs  
+make ssl-status      # Check SSL certificate status
+make ssl-renew       # Test certificate renewal
+```
+
+### Traditional Deployment Methods
+#### Frontend (Vercel/Netlify)
 ```bash
 cd apps/web
 npm run build
 npm run start
 ```
 
-### Backend (Production)
+#### Backend (Production)
 ```bash
 cd apps/mediacms
 pip install -r requirements.txt

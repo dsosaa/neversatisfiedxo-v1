@@ -24,6 +24,7 @@ help:
 	@echo "  build-analyze    Build with bundle analysis"
 	@echo "  deploy           Deploy to production (smart strategy)"
 	@echo "  deploy-production Deploy to production with validation"
+	@echo "  deploy-complete  Complete deployment with nginx and SSL"
 	@echo "  deploy-staging   Deploy to staging environment"
 	@echo ""
 	@echo "Validation:"
@@ -248,6 +249,42 @@ production-status:
 production-health:
 	@echo "🏥 Production health checks:"
 	curl -f https://videos.neversatisfiedxo.com/api/health && echo "✅ Production healthy" || echo "❌ Production unhealthy"
+
+# Complete deployment with nginx and SSL
+deploy-complete:
+	@echo "🚀 Starting complete deployment with nginx and SSL..."
+	chmod +x scripts/deploy-with-nginx.sh
+	./scripts/deploy-with-nginx.sh videos.neversatisfiedxo.com
+
+# Setup nginx and SSL on existing deployment
+setup-nginx:
+	@echo "🌐 Setting up nginx and SSL certificates..."
+	rsync -avz config/nginx-site.conf root@82.180.137.156:/opt/neversatisfiedxo/config/
+	rsync -avz scripts/setup-nginx-ssl.sh root@82.180.137.156:/opt/neversatisfiedxo/scripts/
+	ssh root@82.180.137.156 "cd /opt/neversatisfiedxo && chmod +x scripts/setup-nginx-ssl.sh && ./scripts/setup-nginx-ssl.sh"
+
+# Test website functionality
+test-website:
+	@echo "🧪 Testing website functionality..."
+	rsync -avz scripts/test-website.sh root@82.180.137.156:/opt/neversatisfiedxo/scripts/
+	ssh root@82.180.137.156 "cd /opt/neversatisfiedxo && chmod +x scripts/test-website.sh && ./scripts/test-website.sh"
+
+# Nginx-specific operations
+nginx-status:
+	ssh root@82.180.137.156 "systemctl status nginx"
+
+nginx-logs:
+	ssh root@82.180.137.156 "tail -f /var/log/nginx/error.log"
+
+nginx-reload:
+	ssh root@82.180.137.156 "nginx -t && systemctl reload nginx"
+
+# SSL certificate operations
+ssl-status:
+	ssh root@82.180.137.156 "certbot certificates"
+
+ssl-renew:
+	ssh root@82.180.137.156 "certbot renew --dry-run"
 
 # Quick development validation (prevents deployment issues)
 dev-validate: validate-env validate-docker
