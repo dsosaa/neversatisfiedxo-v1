@@ -1,8 +1,8 @@
 # neversatisfiedxo Premium Trailer Gallery v2.2
 
-🎬 **Enterprise Premium Trailer Gallery** - v2.2 Production-Ready with Complete System Resolution
+🎬 **Enterprise Premium Trailer Gallery** - Production-Ready with Complete System Resolution
 
-A premium trailer gallery site built with **MediaCMS**, **Cloudflare Stream**, and **Next.js**. Features a password-protected gallery with smooth animations, responsive design, and professional video streaming.
+A premium trailer gallery site built with **Next.js 15**, **MediaCMS**, and **Cloudflare Stream**. Features password-protected access, smooth animations, responsive design, and professional video streaming capabilities.
 
 ## 🚀 Production Status - LIVE & OPERATIONAL
 **Live Site**: `https://videos.neversatisfiedxo.com` ✅ **Fully Functional**
@@ -16,17 +16,15 @@ A premium trailer gallery site built with **MediaCMS**, **Cloudflare Stream**, a
 
 ## 🎯 Version 2.2 - Complete System Resolution
 
-**Production System Resolution** with all critical issues fixed and complete operational status achieved. The system is fully deployed and accessible at the production domain with seamless authentication, gallery access, and all UI elements working correctly.
+Production system fully operational with all critical issues resolved. The platform is deployed at the production domain with seamless authentication, gallery access, and optimized UI/UX.
 
-### 🎨 Latest Design Updates (v2.2.0)
-- **Thumbnail Display**: ✅ **FIXED** - All video thumbnails now display correctly using Cloudflare Stream URLs
-- **Scrollbar Styling**: ✅ **FIXED** - Light blue scrollbar (#51c1f5) now applied consistently across all browsers
-- **Favicon Display**: ✅ **FIXED** - White spade icon (♠) now displays in browser tabs and bookmarks
-- **SSL Certificates**: ✅ **FIXED** - Valid Let's Encrypt certificates for secure HTTPS access
-- **Rate Limiting**: ✅ **FIXED** - Optimized rate limiting to prevent 429 errors on legitimate requests
-- **Gallery Access**: ✅ **FIXED** - Gallery page now accessible without redirects
-- **Image Loading**: ✅ **FIXED** - Intersection Observer properly triggers image loading
-- **Docker Integration**: All changes are automatically included in local Docker builds
+### Key Features ✅
+- **Authentication**: Password-protected gallery access working seamlessly
+- **Video Streaming**: Cloudflare Stream integration with adaptive bitrate
+- **UI/UX**: Dark theme with light blue scrollbar, proper favicon display
+- **Performance**: Enterprise-grade optimization with health monitoring
+- **Security**: SSL certificates, rate limiting, CSP headers
+- **Documentation**: Clean, consolidated documentation structure
 
 ## 🐳 Local Docker Setup
 
@@ -52,7 +50,7 @@ cp env.example .env  # Edit with your values
 ./scripts/run-local-docker.sh clean                    # Clean up
 ```
 
-For detailed setup instructions, see [LOCAL_DOCKER_SETUP.md](LOCAL_DOCKER_SETUP.md).
+For detailed setup instructions, see [Development Guide](./docs/development/DEVELOPMENT.md).
 
 ## 🌟 Features
 
@@ -75,67 +73,7 @@ For detailed setup instructions, see [LOCAL_DOCKER_SETUP.md](LOCAL_DOCKER_SETUP.
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+ and npm
-- Python 3.8+ and pip
-- Django-compatible database (PostgreSQL recommended)
-
-### Frontend Setup
-
-```bash
-cd apps/web
-npm install
-cp .env.local.example .env.local
-```
-
-Configure environment variables in `.env.local`:
-```bash
-NEXT_PUBLIC_SITE_NAME=neversatisfiedxo
-NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE=your_customer_code
-MEDIACMS_BASE_URL=http://localhost:8000
-GATE_PASSWORD=your_secure_password
-```
-
-Start development server:
-```bash
-npm run dev
-```
-
-### Backend Setup
-
-```bash
-cd apps/mediacms
-pip install -r requirements.txt
-```
-
-Add to your MediaCMS `settings.py`:
-```python
-INSTALLED_APPS = [
-    # ... existing apps
-    'trailers',
-    'rest_framework', 
-    'django_filters',
-    'corsheaders',
-]
-
-# Add CORS middleware
-MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    # ... existing middleware
-]
-
-# Enable CORS for frontend
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
-```
-
-Run migrations and import data:
-```bash
-python manage.py migrate
-python manage.py import_videodb ../data/VideoDB.csv --user admin
-python manage.py runserver
-```
+Choose your preferred setup method:
 
 ## 📁 Project Structure
 
@@ -338,46 +276,24 @@ Comprehensive documentation is available in the [`docs/`](./docs/) folder:
 - **[Troubleshooting](./docs/TROUBLESHOOTING.md)** - Complete troubleshooting guide
 - **[Changelog](./CHANGELOG.md)** - Version history and recent fixes
 
-## 🚀 Modern Quick Start
-
 ### Option 1: Docker Compose (Recommended)
 ```bash
-# Clone repository
-git clone <repository>
-cd V0-Trailer
-
-# Start all services with Docker
+# Start all services
 docker compose up -d
 
 # Import sample data
 docker compose exec v0_trailer_mediacms python manage.py import_videodb /app/data/VideoDB.csv --user admin
 ```
-
 **Access**: Frontend at http://localhost:3000, Admin at http://localhost:8000/admin/
 
 ### Option 2: Development Mode
 ```bash
-# Frontend (Next.js 15.5.2 with Turbopack)
-cd apps/web
-npm install
-cp .env.local.example .env.local  # Configure environment
-npm run dev                       # Fast development with Turbopack (port 3000)
+# Frontend (Next.js 15 with Turbopack)
+cd apps/web && npm install && npm run dev
 
-# Backend (Django + MediaCMS)
-cd apps/mediacms
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py import_videodb ../data/VideoDB.csv --user admin
-python manage.py runserver
+# Backend (Django + MediaCMS)  
+cd apps/mediacms && pip install -r requirements.txt && python manage.py runserver
 ```
-
-### Modern Development Features
-- **Turbopack**: Ultra-fast development builds and hot reload
-- **TypeScript 5**: Strict mode with comprehensive type checking
-- **Advanced Testing**: E2E with Playwright, security audits, performance monitoring
-- **Security**: Automated vulnerability scanning and CSP headers
-- **Performance**: Bundle analysis, Core Web Vitals monitoring, Lighthouse CI
-- **Docker Integration**: Multi-container orchestration with health checks
 
 ## 📝 License
 
@@ -401,43 +317,6 @@ For technical support:
 3. Check application health at `/api/health`
 4. Create an issue with detailed information
 
-## 🔧 Troubleshooting
-
-### Common Issues & Solutions
-
-#### Thumbnail Images Not Displaying
-**Symptoms**: Gallery shows loading spinners instead of video thumbnails
-**Solution**: 
-1. Clear browser cache (Ctrl+F5 or Cmd+Shift+R)
-2. Check browser console for JavaScript errors
-3. Verify Cloudflare Stream customer code is set correctly
-4. Ensure images are loading via Intersection Observer
-
-#### SSL Certificate Errors
-**Symptoms**: "Your connection is not private" or certificate warnings
-**Solution**:
-1. Access the site via `https://videos.neversatisfiedxo.com` (without www)
-2. Clear browser cache and cookies
-3. Check if certificate is valid: `curl -I https://videos.neversatisfiedxo.com`
-
-#### Gallery Page Redirects
-**Symptoms**: Gallery page redirects to home page or login
-**Solution**:
-1. Ensure you're logged in with correct password (`yesmistress`)
-2. Check if middleware is properly configured
-3. Clear browser cookies and try again
-
-#### Rate Limiting Issues
-**Symptoms**: "Too Many Requests" (429) errors
-**Solution**:
-1. Wait a few minutes before retrying
-2. Check if rate limits are properly configured
-3. Clear browser cache and cookies
-
-### Health Check Endpoints
-- **Basic Health**: `https://videos.neversatisfiedxo.com/api/health`
-- **Detailed Status**: `https://videos.neversatisfiedxo.com/api/health?detailed=true`
-- **Test Images**: `https://videos.neversatisfiedxo.com/test-image`
 
 ## 📊 Project Status
 
@@ -449,20 +328,14 @@ For technical support:
 ✅ **Enterprise Features** - Advanced admin, health monitoring, CI/CD pipeline, automated deployment
 ✅ **All Issues Resolved** - Thumbnails, scrollbar, favicon, SSL, and gallery access working perfectly
 
-### Latest Updates (v2.0 - January 2025)
-- **Next.js 15.5.2** with Turbopack for fast development builds
-- **React 19.1.0** with modern concurrent features and hooks
-- **TypeScript 5** with strict mode and comprehensive type safety
-- **Advanced Security** - CSP headers, rate limiting, vulnerability scanning
-- **Performance Monitoring** - Core Web Vitals, Lighthouse CI, bundle optimization
-- **Enterprise Admin** - Enhanced Django admin with Cloudflare integration
-- **Comprehensive Testing** - E2E testing with Playwright, security auditing, performance validation
-- **Docker Optimization** - Multi-environment profiles with health monitoring
-- **Complete Codebase Refactoring** - Full system optimization and modernization
-- **Production Deployment Ready** - CI/CD pipeline with automated validation
+### Latest Updates (v2.2 - January 2025)
+- **Documentation Cleanup** - Removed 13 redundant files, consolidated information
+- **Version Alignment** - Updated all references to current v2.2 status  
+- **Project Structure** - Streamlined from 16+ docs to 3 core + organized docs/
+- **Clean Architecture** - Professional documentation with single source of truth
 
 ---
 
 **Built with**: Next.js 15.5.2, React 19.1.0, TypeScript 5, Django, MediaCMS, PostgreSQL, Redis, Docker, Cloudflare Stream
 
-**Last Updated**: January 2025 | **Version**: 2.0 - Enterprise Edition with Complete System Modernization
+**Last Updated**: January 2025 | **Version**: 2.2 - Complete System Resolution with Documentation Cleanup
