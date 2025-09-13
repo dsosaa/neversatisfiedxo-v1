@@ -55,11 +55,11 @@ const nextConfig: NextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff'
           },
-          // Allow same-origin framing for video compatibility
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
-          },
+          // DISABLE X-Frame-Options for video streaming compatibility
+          // {
+          //   key: 'X-Frame-Options',
+          //   value: 'SAMEORIGIN'
+          // },
           // Controls referrer information
           {
             key: 'Referrer-Policy',
@@ -75,16 +75,37 @@ const nextConfig: NextConfig = {
             key: 'X-DNS-Prefetch-Control',
             value: 'off'
           },
-          // Optimized permissions for video streaming
-          {
-            key: 'Permissions-Policy',
-            value: [
-              'camera=(self)',
-              'microphone=()',
-              'geolocation=()',
-              'browsing-topics=()'
-            ].join(', ')
-          }
+          // DISABLE Permissions-Policy for video streaming compatibility
+          // {
+          //   key: 'Permissions-Policy',
+          //   value: [
+          //     'camera=(self)',
+          //     'microphone=()',
+          //     'geolocation=()',
+          //     'browsing-topics=()'
+          //   ].join(', ')
+          // },
+          // COMPLETELY DISABLE CSP FOR VIDEO STREAMING TEST
+          // {
+          //   key: 'Content-Security-Policy',
+          //   value: [
+          //     "default-src 'self'",
+          //     "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+          //     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          //     "img-src 'self' data: https://videodelivery.net https://imagedelivery.net https://*.cloudflarestream.com blob:",
+          //     "font-src 'self' https://fonts.gstatic.com",
+          //     "media-src 'self' https://videodelivery.net https://*.cloudflarestream.com blob:",
+          //     "frame-src 'self' https://iframe.videodelivery.net https://*.cloudflarestream.com https://challenges.cloudflare.com",
+          //     "connect-src 'self' https://cloudflareinsights.com https://api.cloudflare.com https://*.cloudflarestream.com",
+          //     "worker-src 'self' blob:",
+          //     "manifest-src 'self'",
+          //     "object-src 'none'",
+          //     "base-uri 'self'",
+          //     "form-action 'self'",
+          //     "frame-ancestors 'none'",
+          //     "upgrade-insecure-requests"
+          //   ].join('; ')
+          // }
         ]
       }
     ];
@@ -118,8 +139,8 @@ const nextConfig: NextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     // Enhanced image optimization
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    deviceSizes: [640, 750, 828, 960, 1080, 1200, 1440, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384, 480, 540, 810],
     minimumCacheTTL: 3600, // 1 hour for faster deployments
     unoptimized: false,
     loader: 'default',

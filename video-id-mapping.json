@@ -1,0 +1,144 @@
+{
+  "_comment": "Mapping from CSV Video Numbers to Real Cloudflare Stream UIDs",
+  "_note": "Generated from Cloudflare Stream API on Sept 12, 2025",
+  "_total_videos": 18,
+  "_ready_to_stream": 17,
+  "mappings": [
+    {
+      "csv_video_number": 189,
+      "real_uid": "62fee0bff98a4dc4b8dffbaffbb143a4",
+      "filename": "#189.m4v",
+      "duration": 23.3,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 188,
+      "real_uid": "b9499650940443b7b47168794ad2a314",
+      "filename": "#188.m4v",
+      "duration": 17.9,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 177,
+      "real_uid": "f535d3ebfc3140bcbf194f0cf50ad824",
+      "filename": "#177.mp4",
+      "duration": 30.2,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 86,
+      "real_uid": "ba25eca76fa24bbe82a36b1eaf39f166",
+      "filename": "#086.mp4",
+      "duration": 54.6,
+      "resolution": "3840x2026",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 46,
+      "real_uid": "cf5b52ffc3ad4b32908aa64d96e38603",
+      "filename": "#046.mp4",
+      "duration": 51.1,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 36,
+      "real_uid": "f93d4f243366aeaca0be7394e0a7a61e",
+      "filename": "#036.mp4",
+      "duration": 72.6,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 28,
+      "real_uid": "6938118acc7f8afbee07890ec3efd74a",
+      "filename": "#028.mp4",
+      "duration": 73.2,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 45,
+      "real_uid": "1d512b5028958b771bb5298c055f0fe7",
+      "filename": "#045.mp4",
+      "duration": 25.1,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 44,
+      "real_uid": "cf5a273407b9388487b29c0444e7e665",
+      "filename": "#044.mp4",
+      "duration": 27.5,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 35,
+      "real_uid": "d68ccb8b43de484ba663d41c9c2213e9",
+      "filename": "#035.mp4",
+      "duration": 28.3,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 182,
+      "real_uid": "5e4ec3fd39aa438092619a4decce6b18",
+      "filename": "#182.mp4",
+      "duration": 26.4,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 181,
+      "real_uid": "eda292db8daa4b60ad80f83fce2ef252",
+      "filename": "#181.mp4",
+      "duration": 33.7,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    },
+    {
+      "csv_video_number": 180,
+      "real_uid": "2b858787cf6e4c1b93e42b5f795fed5a",
+      "filename": "#180.mp4",
+      "duration": 24.4,
+      "resolution": "3840x2160",
+      "ready_to_stream": true
+    }
+  ],
+  "_additional_videos_without_csv_mapping": [
+    {
+      "real_uid": "73f75f93eba1ba6b340b051ee9528c92",
+      "filename": "#177.mp4",
+      "duration": 30.2,
+      "note": "Duplicate of #177 - different upload"
+    },
+    {
+      "real_uid": "c2deb9ec353fb7decdced75a72d4b12d",
+      "filename": "#183.m4v",
+      "duration": 42.4
+    },
+    {
+      "real_uid": "81dc9065ebbce92eb94ac41403650a16",
+      "filename": "#086.mp4",
+      "duration": 54.6,
+      "note": "Duplicate of #086 - different upload"
+    },
+    {
+      "real_uid": "d2e4b40c792014d6e2300eaef5309729",
+      "filename": "#188.m4v",
+      "duration": 17.9,
+      "note": "Duplicate of #188 - different upload"
+    },
+    {
+      "real_uid": "b1b6244a6fea3b19df13fb2330ce7811",
+      "filename": "#036.mp4",
+      "status": "pendingupload",
+      "ready_to_stream": false,
+      "note": "Still uploading - not ready"
+    }
+  ]
+}

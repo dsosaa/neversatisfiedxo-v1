@@ -3,7 +3,7 @@
 import { OptimizedImage } from '@/components/optimized-image'
 
 export default function TestImagePage() {
-  const testImageUrl = 'https://videodelivery.net/365ca453af0f7e71f332a910878f99fc/thumbnails/thumbnail.jpg?time=5s'
+  const testImageUrl = 'https://videodelivery.net/365ca453af0f7e71f332a910878f99fc/thumbnails/thumbnail.jpg?time=0.03s'
   
   return (
     <div className="p-8">

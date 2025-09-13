@@ -1,4 +1,7 @@
 # Docker Compose configuration - version removed for modern Docker Compose
+# v2.6.0 - Premium Visual Experience & Performance Optimization
+# Features: 4K video support, high-quality posters, blue scrollbar theme, advanced image loading
+# For TypeScript changes, rebuild containers: docker compose build web --no-cache
 
 services:
   # Next.js Frontend Application
@@ -13,6 +16,9 @@ services:
       # Parallel build arguments
       args:
         BUILDKIT_INLINE_CACHE: 1
+        NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE: ${NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}
+        NEXT_PUBLIC_SITE_NAME: ${NEXT_PUBLIC_SITE_NAME:-neversatisfiedxo}
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-https://videos.neversatisfiedxo.com}
     container_name: v0_trailer_web
     restart: unless-stopped
     ports:
@@ -147,7 +153,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./config/nginx-dev.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx-dev.conf/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./config/ssl:/etc/nginx/ssl:ro
       - nginx_logs:/var/log/nginx
     depends_on:

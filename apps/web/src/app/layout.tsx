@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google";
-import { headers } from 'next/headers';
 import "./globals.css";
 import { Providers } from "@/lib/providers";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
@@ -47,22 +46,17 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Get nonce from middleware for CSP compatibility following Next.js best practices
-  // Next.js automatically uses this for scripts and styles when present in x-nonce header
-  await headers()
-
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
-        {/* Next.js automatically handles script nonces via the nonce from x-nonce header */}
       </head>
       <body
-        className={`${inter.variable} ${jetBrainsMono.variable} ${playfairDisplay.variable} antialiased min-h-screen bg-background text-foreground`}
+        className={`${inter.variable} ${jetBrainsMono.variable} ${playfairDisplay.variable} antialiased min-h-screen bg-background text-foreground scrollbar-blue`}
         suppressHydrationWarning
       >
         <Providers>

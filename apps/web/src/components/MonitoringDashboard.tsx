@@ -65,7 +65,7 @@ export default function MonitoringDashboard() {
     };
 
     fetchMonitoringData();
-    const interval = setInterval(fetchMonitoringData, 5000); // Update every 5 seconds
+    const interval = setInterval(fetchMonitoringData, 60000); // Update every 60 seconds
 
     return () => clearInterval(interval);
   }, []);

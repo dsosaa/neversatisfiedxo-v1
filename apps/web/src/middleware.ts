@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const COOKIE_NAME = 'nsx_gate'
-const PROTECTED_PATHS = ['/', '/video']
-const PUBLIC_PATHS = ['/enter', '/api/gate', '/api/health', '/gallery', '/test-image']
+const COOKIE_NAME = 'authenticated'
+const PROTECTED_PATHS = ['/video', '/gallery'] // Protected paths requiring authentication
+const PUBLIC_PATHS = ['/enter', '/api/gate', '/api/health', '/test-image', '/debug-videos', '/test-video-preview', '/test-poster']
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
@@ -21,38 +21,8 @@ interface RateLimitData {
 const rateLimitStore = new Map<string, RateLimitData>()
 
 
-// Generate nonce for CSP following Next.js official best practices
-function generateNonce(): string {
-  // Use Buffer and crypto.randomUUID as per Next.js documentation
-  return Buffer.from(crypto.randomUUID()).toString('base64')
-}
+// REMOVED: generateNonce and generateVideoStreamingCSP functions - no longer needed for video streaming
 
-// Generate CSP header following Next.js official patterns
-function generateCSPHeader(nonce: string): string {
-  const isDevelopment = process.env.NODE_ENV === 'development'
-  
-  // Following Next.js official CSP patterns with nonce and strict-dynamic
-  const baseCSP = `
-    default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${isDevelopment ? "'unsafe-eval'" : ''} https://challenges.cloudflare.com;
-    style-src 'self' 'nonce-${nonce}' ${isDevelopment ? "'unsafe-inline'" : ''} https://fonts.googleapis.com;
-    img-src 'self' data: https://videodelivery.net https://imagedelivery.net https://*.cloudflarestream.com blob:;
-    font-src 'self' https://fonts.gstatic.com;
-    media-src 'self' https://videodelivery.net https://*.cloudflarestream.com blob:;
-    frame-src 'self' https://iframe.videodelivery.net https://challenges.cloudflare.com;
-    connect-src 'self' https://cloudflareinsights.com https://api.cloudflare.com https://*.cloudflarestream.com;
-    worker-src 'self' blob:;
-    manifest-src 'self';
-    object-src 'none';
-    base-uri 'self';
-    form-action 'self';
-    frame-ancestors 'none';
-    ${isDevelopment ? '' : 'upgrade-insecure-requests;'}
-  `
-  
-  // Replace newline characters and spaces for clean header as per Next.js docs
-  return baseCSP.replace(/\s{2,}/g, ' ').trim()
-}
 
 function getRateLimitKey(request: NextRequest): string {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
@@ -118,7 +88,7 @@ async function checkRateLimit(key: string, isAuthRequest = false): Promise<{ all
   }
 }
 
-function addSecurityHeaders(response: NextResponse, nonce?: string, cspHeaderValue?: string): NextResponse {
+function addSecurityHeaders(response: NextResponse): NextResponse {
   
   // Add additional runtime security headers
   response.headers.set('X-Robots-Tag', 'noindex, nofollow')
@@ -128,15 +98,15 @@ function addSecurityHeaders(response: NextResponse, nonce?: string, cspHeaderVal
   response.headers.set('Pragma', 'no-cache')
   response.headers.set('Expires', '0')
   
-  // Add CSP header with XSS protection
-  if (cspHeaderValue) {
-    response.headers.set('Content-Security-Policy', cspHeaderValue)
-  }
+  // COMPLETELY DISABLE CSP FOR VIDEO STREAMING TEST
+  // if (cspHeaderValue) {
+  //   response.headers.set('Content-Security-Policy', cspHeaderValue)
+  // }
   
-  // Add nonce header for scripts and styles (always set for CSP compatibility)
-  if (nonce) {
-    response.headers.set('x-nonce', nonce)
-  }
+  // DISABLE NONCE HEADER FOR CSP TEST
+  // if (nonce) {
+  //   response.headers.set('x-nonce', nonce)
+  // }
   
   // Add security event headers for monitoring
   response.headers.set('X-Security-Check', 'passed')
@@ -241,9 +211,7 @@ export async function middleware(request: NextRequest) {
   const authCookie = request.cookies.get(COOKIE_NAME)
   const isAuthenticated = await isValidAuthentication(authCookie)
 
-  // Generate nonce for CSP security following Next.js official pattern
-  const nonce = generateNonce()
-  const cspHeaderValue = generateCSPHeader(nonce)
+  // COMPLETELY DISABLE CSP FOR VIDEO STREAMING TEST - All CSP generation removed
 
   // Security validation: Check for suspicious patterns
   const suspiciousPatterns = [
@@ -293,20 +261,10 @@ export async function middleware(request: NextRequest) {
 
   // Allow public paths
   if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
-    // Create request headers with nonce as per Next.js official pattern
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set('x-nonce', nonce)
+    const response = NextResponse.next()
     
-    const response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    })
-    
-    // Set CSP header as per Next.js documentation
-    response.headers.set('Content-Security-Policy', cspHeaderValue)
     response.headers.set('X-RateLimit-Remaining', remaining.toString())
-    return addSecurityHeaders(response, nonce, cspHeaderValue)
+    return addSecurityHeaders(response)
   }
 
   // Allow static assets with additional security
@@ -345,20 +303,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(galleryUrl)
   }
 
-  // Add security headers to authenticated requests following Next.js pattern
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-nonce', nonce)
+  // Add security headers to authenticated requests
+  const response = NextResponse.next()
   
-  const response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  })
-  
-  // Set CSP header as per Next.js documentation
-  response.headers.set('Content-Security-Policy', cspHeaderValue)
   response.headers.set('X-RateLimit-Remaining', remaining.toString())
-  return addSecurityHeaders(response, nonce, cspHeaderValue)
+  return addSecurityHeaders(response)
 }
 
 export const config = {

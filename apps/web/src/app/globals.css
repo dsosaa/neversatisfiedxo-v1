@@ -224,60 +224,150 @@
   }
 }
 
-/* Custom scrollbar styling - Enhanced for better visibility */
+/* Enhanced Custom Scrollbar Styling - Blue Theme */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-  border-radius: 4px;
+  background: hsl(0 0% 8%); /* Dark track background */
+  border-radius: 6px;
+  border: 1px solid hsl(0 0% 15%);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(199 89% 64%); /* Direct sky-400 color for better visibility */
-  border-radius: 4px;
-  transition: background 0.2s ease;
+  background: linear-gradient(180deg, 
+    hsl(199 89% 70%) 0%, 
+    hsl(199 89% 60%) 50%, 
+    hsl(199 89% 50%) 100%
+  );
+  border-radius: 6px;
+  border: 1px solid hsl(199 89% 40%);
+  box-shadow: 
+    inset 0 1px 0 hsl(199 89% 80%),
+    0 1px 2px hsl(0 0% 0% / 0.3);
+  transition: all 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(199 89% 64% / 0.8);
+  background: linear-gradient(180deg, 
+    hsl(199 89% 75%) 0%, 
+    hsl(199 89% 65%) 50%, 
+    hsl(199 89% 55%) 100%
+  );
+  box-shadow: 
+    inset 0 1px 0 hsl(199 89% 85%),
+    0 2px 4px hsl(0 0% 0% / 0.4);
+  transform: scale(1.05);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, 
+    hsl(199 89% 60%) 0%, 
+    hsl(199 89% 50%) 50%, 
+    hsl(199 89% 40%) 100%
+  );
 }
 
 ::-webkit-scrollbar-corner {
-  background: hsl(var(--muted));
+  background: hsl(0 0% 8%);
+  border-radius: 6px;
 }
 
-/* Firefox scrollbar styling */
+/* Firefox scrollbar styling with enhanced colors */
 * {
   scrollbar-width: thin;
-  scrollbar-color: hsl(199 89% 64%) hsl(var(--muted));
+  scrollbar-color: hsl(199 89% 60%) hsl(0 0% 8%);
 }
 
 /* Additional scrollbar styling for better coverage */
 html, body {
   scrollbar-width: thin;
-  scrollbar-color: hsl(199 89% 64%) hsl(var(--muted));
+  scrollbar-color: hsl(199 89% 60%) hsl(0 0% 8%);
 }
 
-/* Ensure scrollbar styles apply to all elements */
+/* Ensure scrollbar styles apply to all elements with enhanced styling */
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
 }
 
 *::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-  border-radius: 4px;
+  background: hsl(0 0% 8%);
+  border-radius: 6px;
+  border: 1px solid hsl(0 0% 15%);
 }
 
 *::-webkit-scrollbar-thumb {
-  background: hsl(199 89% 64%);
-  border-radius: 4px;
-  transition: background 0.2s ease;
+  background: linear-gradient(180deg, 
+    hsl(199 89% 70%) 0%, 
+    hsl(199 89% 60%) 50%, 
+    hsl(199 89% 50%) 100%
+  );
+  border-radius: 6px;
+  border: 1px solid hsl(199 89% 40%);
+  box-shadow: 
+    inset 0 1px 0 hsl(199 89% 80%),
+    0 1px 2px hsl(0 0% 0% / 0.3);
+  transition: all 0.2s ease;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: hsl(199 89% 64% / 0.8);
+  background: linear-gradient(180deg, 
+    hsl(199 89% 75%) 0%, 
+    hsl(199 89% 65%) 50%, 
+    hsl(199 89% 55%) 100%
+  );
+  box-shadow: 
+    inset 0 1px 0 hsl(199 89% 85%),
+    0 2px 4px hsl(0 0% 0% / 0.4);
+  transform: scale(1.05);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, 
+    hsl(199 89% 60%) 0%, 
+    hsl(199 89% 50%) 50%, 
+    hsl(199 89% 40%) 100%
+  );
+}
+
+/* Special scrollbar styling for modal and dialog content */
+[role="dialog"] ::-webkit-scrollbar,
+.modal-content ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+[role="dialog"] ::-webkit-scrollbar-thumb,
+.modal-content ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, 
+    hsl(199 89% 65%) 0%, 
+    hsl(199 89% 55%) 50%, 
+    hsl(199 89% 45%) 100%
+  );
+  border-radius: 5px;
+  border: 1px solid hsl(199 89% 35%);
+}
+
+/* Scrollbar styling for light mode (if needed) */
+@media (prefers-color-scheme: light) {
+  ::-webkit-scrollbar-track {
+    background: hsl(0 0% 95%);
+    border: 1px solid hsl(0 0% 85%);
+  }
+  
+  *::-webkit-scrollbar-track {
+    background: hsl(0 0% 95%);
+    border: 1px solid hsl(0 0% 85%);
+  }
+  
+  * {
+    scrollbar-color: hsl(199 89% 60%) hsl(0 0% 95%);
+  }
+  
+  html, body {
+    scrollbar-color: hsl(199 89% 60%) hsl(0 0% 95%);
+  }
 }

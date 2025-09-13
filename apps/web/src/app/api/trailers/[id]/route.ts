@@ -160,7 +160,14 @@ export async function GET(
     }
     
     const trailers = loadTrailerData()
-    const trailer = trailers.find(t => t.cf_video_uid === videoId || t.id === videoId)
+    // Try to find trailer by multiple identifiers:
+    // 1. Direct video UID match (e.g., "ee65f7035c7445388bc1237d3d51cddd")
+    // 2. Video number match (e.g., "4" should match video_number 4)
+    const trailer = trailers.find(t => 
+      t.cf_video_uid === videoId || 
+      t.id === videoId ||
+      t.video_number.toString() === videoId
+    )
     
     if (!trailer) {
       return NextResponse.json(

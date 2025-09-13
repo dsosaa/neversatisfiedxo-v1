@@ -138,24 +138,25 @@ export const jwtPayloadSchema = z.object({
   jti: z.string().uuid('Invalid token ID'),
 })
 
+// DISABLE CSP AND NONCE VALIDATION FOR VIDEO STREAMING
 // Content Security Policy nonce validation
-export const nonceSchema = z.object({
-  nonce: z.string()
-    .length(24, 'Nonce must be exactly 24 characters')
-    .regex(/^[A-Za-z0-9+/=]+$/, 'Invalid nonce format'),
-})
+// export const nonceSchema = z.object({
+//   nonce: z.string()
+//     .length(24, 'Nonce must be exactly 24 characters')
+//     .regex(/^[A-Za-z0-9+/=]+$/, 'Invalid nonce format'),
+// })
 
 // Content Security Policy validation
-export const cspReportSchema = z.object({
-  'blocked-uri': z.string(),
-  'document-uri': z.string(),
-  'original-policy': z.string(),
-  'referrer': z.string().optional(),
-  'violated-directive': z.string(),
-  'source-file': z.string().optional(),
-  'line-number': z.number().optional(),
-  'column-number': z.number().optional(),
-})
+// export const cspReportSchema = z.object({
+//   'blocked-uri': z.string(),
+//   'document-uri': z.string(),
+//   'original-policy': z.string(),
+//   'referrer': z.string().optional(),
+//   'violated-directive': z.string(),
+//   'source-file': z.string().optional(),
+//   'line-number': z.number().optional(),
+//   'column-number': z.number().optional(),
+// })
 
 // Health check response
 export const healthCheckSchema = z.object({
@@ -329,5 +330,5 @@ export type ContactForm = z.infer<typeof contactSchema>
 export type FileUpload = z.infer<typeof fileUploadSchema>
 export type Trailer = z.infer<typeof trailerSchema>
 export type SecurityEvent = z.infer<typeof securityEventSchema>
-export type CSPReport = z.infer<typeof cspReportSchema>
+// export type CSPReport = z.infer<typeof cspReportSchema>
 export type HealthCheck = z.infer<typeof healthCheckSchema>

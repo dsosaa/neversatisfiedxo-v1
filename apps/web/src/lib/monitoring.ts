@@ -54,7 +54,7 @@ class MonitoringService {
           message: event.message,
           stack: event.error?.stack,
           url: event.filename,
-          userAgent: navigator.userAgent,
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
           metadata: {
             line: event.lineno,
             column: event.colno,
@@ -70,7 +70,7 @@ class MonitoringService {
           message: `Unhandled Promise Rejection: ${event.reason}`,
           stack: event.reason?.stack,
           url: window.location.href,
-          userAgent: navigator.userAgent,
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
           metadata: {
             type: 'promise_rejection',
             reason: event.reason,
@@ -85,7 +85,7 @@ class MonitoringService {
           level: 'error',
           message: args.join(' '),
           url: window.location.href,
-          userAgent: navigator.userAgent,
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'server',
           metadata: {
             type: 'console_error',
             args: args,

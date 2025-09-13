@@ -272,6 +272,52 @@ export default {
         '.grid-auto-rows-fr': {
           'grid-auto-rows': '1fr'
         },
+        // Custom scrollbar utilities
+        '.scrollbar-blue': {
+          'scrollbar-width': 'thin',
+          'scrollbar-color': 'hsl(199 89% 60%) hsl(0 0% 8%)',
+          '&::-webkit-scrollbar': {
+            width: '12px',
+            height: '12px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'hsl(0 0% 8%)',
+            borderRadius: '6px',
+            border: '1px solid hsl(0 0% 15%)',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'linear-gradient(180deg, hsl(199 89% 70%) 0%, hsl(199 89% 60%) 50%, hsl(199 89% 50%) 100%)',
+            borderRadius: '6px',
+            border: '1px solid hsl(199 89% 40%)',
+            boxShadow: 'inset 0 1px 0 hsl(199 89% 80%), 0 1px 2px hsl(0 0% 0% / 0.3)',
+            transition: 'all 0.2s ease',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: 'linear-gradient(180deg, hsl(199 89% 75%) 0%, hsl(199 89% 65%) 50%, hsl(199 89% 55%) 100%)',
+            boxShadow: 'inset 0 1px 0 hsl(199 89% 85%), 0 2px 4px hsl(0 0% 0% / 0.4)',
+            transform: 'scale(1.05)',
+          },
+        },
+        '.scrollbar-blue-thin': {
+          'scrollbar-width': 'thin',
+          'scrollbar-color': 'hsl(199 89% 60%) hsl(0 0% 8%)',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+            height: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'hsl(0 0% 8%)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'hsl(199 89% 60%)',
+            borderRadius: '4px',
+            transition: 'background 0.2s ease',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: 'hsl(199 89% 70%)',
+          },
+        },
       }
       addUtilities(newUtilities)
     }

@@ -65,7 +65,7 @@ export function OptimizedVideoPlayer({
   quality = 'auto',
   enableAdaptiveBitrate = true,
   enablePreloading = true,
-  enableAnalytics = true,
+  enableAnalytics = false, // Disable heavy analytics by default
   enableCloudflareOptimizations = true,
   cacheStrategy = 'balanced',
 }: OptimizedVideoPlayerProps) {
@@ -222,19 +222,20 @@ export function OptimizedVideoPlayer({
     };
 
     const handleTimeUpdate = () => {
+      // Throttle expensive calculations to reduce performance impact
       const currentTime = video.currentTime;
       const timeDiff = currentTime - lastTime;
       
-      if (timeDiff > 0) {
-        // Estimate bitrate based on buffered data
+      // Only calculate metrics every 2 seconds instead of every frame
+      if (timeDiff > 2) {
         const buffered = video.buffered;
         if (buffered.length > 0) {
           const bufferedEnd = buffered.end(buffered.length - 1);
-          const estimatedBitrate = (bufferedEnd - lastTime) * 1000000; // Rough estimate
+          const estimatedBitrate = (bufferedEnd - lastTime) * 1000000;
           bitrateSamples.push(estimatedBitrate);
           
-          if (bitrateSamples.length > 10) {
-            bitrateSamples = bitrateSamples.slice(-10); // Keep last 10 samples
+          if (bitrateSamples.length > 5) { // Reduced from 10
+            bitrateSamples = bitrateSamples.slice(-5);
           }
           
           const averageBitrate = bitrateSamples.reduce((a, b) => a + b, 0) / bitrateSamples.length;
@@ -246,9 +247,8 @@ export function OptimizedVideoPlayer({
             peakBitrate: Math.round(peakBitrate),
           }));
         }
+        lastTime = currentTime;
       }
-      
-      lastTime = currentTime;
     };
 
     const handlePlay = () => {
@@ -473,9 +473,11 @@ export function getOptimalVideoSettings() {
     };
   }
 
-  const connection = (navigator as unknown as { connection?: { effectiveType: string; downlink: number } }).connection;
-  const isMobile = window.innerWidth < 768;
-  const isTablet = window.innerWidth < 1024;
+  const connection = typeof navigator !== 'undefined' 
+    ? (navigator as unknown as { connection?: { effectiveType: string; downlink: number } }).connection
+    : null;
+  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+  const isTablet = typeof window !== 'undefined' ? window.innerWidth < 1024 : false;
   
   let clientBandwidthHint = 5000000; // 5 Mbps default
   let quality: 'auto' | '1080p' | '720p' | '480p' | '360p' = 'auto';

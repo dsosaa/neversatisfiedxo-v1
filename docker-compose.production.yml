@@ -1,5 +1,6 @@
 # Production Docker Compose configuration
-# Clean single-instance deployment for production VPS
+# v2.6.0 - Premium Visual Experience & Performance Optimization
+# Features: 4K video support, high-quality posters, blue scrollbar theme, advanced image loading
 # Usage: docker compose -f docker-compose.production.yml up -d --build
 
 services:
@@ -11,6 +12,9 @@ services:
       target: runner
       args:
         BUILDKIT_INLINE_CACHE: 1
+        NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE: ${NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}
+        NEXT_PUBLIC_SITE_NAME: ${NEXT_PUBLIC_SITE_NAME:-neversatisfiedxo}
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-https://videos.neversatisfiedxo.com}
     container_name: v0_trailer_web_prod
     restart: unless-stopped
     ports:
@@ -21,12 +25,17 @@ services:
       - PORT=3000
       - HOSTNAME=0.0.0.0
       
-      # Required environment variables
+      # Required environment variables - validated at runtime
       - NEXT_PUBLIC_SITE_NAME=${NEXT_PUBLIC_SITE_NAME:-neversatisfiedxo}
       - NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE=${NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}
       - GATE_PASSWORD=${GATE_PASSWORD}
       - MEDIACMS_BASE_URL=${MEDIACMS_BASE_URL:-http://mediacms:80}
       - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-https://videos.neversatisfiedxo.com}
+      
+      # Cloudflare Stream configuration
+      - CF_ACCOUNT_ID=${CF_ACCOUNT_ID}
+      - CF_STREAM_API_TOKEN=${CF_STREAM_API_TOKEN}
+      - CF_GLOBAL_API_KEY=${CF_GLOBAL_API_KEY}
       
       # Authentication secrets
       - JWT_SECRET=${JWT_SECRET}

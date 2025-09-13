@@ -169,7 +169,7 @@ export default function VideoDetailPage() {
                       autoplay={false}
                       muted={false}
                       className="rounded-2xl"
-                      poster={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=5s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`}
+                      poster={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=0.03s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`}
                     />
                   </Suspense>
                 </m.div>
@@ -190,7 +190,7 @@ export default function VideoDetailPage() {
                       autoplay={false}
                       muted={false}
                       className="rounded-2xl"
-                      poster={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=5s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`}
+                      poster={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=0.03s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`}
                     />
                   </Suspense>
                 </div>

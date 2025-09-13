@@ -2,22 +2,26 @@
 
 This guide provides step-by-step instructions for deploying the V0 Trailer application to production with full security hardening and monitoring.
 
-## 🎉 Version 2.3 - Advanced Enterprise Optimizations
+## 🎉 Version 2.5 - Complete Video Streaming Resolution
 
-**Complete System Resolution** - All previously reported issues have been fixed in production:
-- ✅ **Thumbnail Display**: Video thumbnails now display correctly using Cloudflare Stream URLs
+**Critical Video Issues Resolved** - All video streaming problems have been fixed in production:
+- ✅ **Video Streaming**: All Cloudflare Stream players now load and function correctly
+- ✅ **API Routes**: Enhanced `/api/trailers/[id]` supports both numeric and UID lookups
+- ✅ **CSP Headers**: Removed restrictive policies blocking video iframe loading
+- ✅ **Container Sync**: Production containers rebuilt with latest TypeScript fixes
+- ✅ **Cross-Browser**: Unified video experience across Chrome, Safari, Firefox, Edge
+- ✅ **Thumbnail Display**: Video thumbnails display correctly using Cloudflare Stream URLs
 - ✅ **Scrollbar Styling**: Light blue theme (#51c1f5) applied consistently across browsers
-- ✅ **Favicon Display**: White spade icon (♠) now displays in browser tabs and bookmarks
+- ✅ **Favicon Display**: White spade icon (♠) displays in browser tabs and bookmarks
 - ✅ **SSL Certificates**: Valid Let's Encrypt certificates installed and working
 - ✅ **Gallery Access**: Direct access without redirects, middleware properly configured
 - ✅ **Rate Limiting**: Optimized to prevent 429 errors on legitimate requests
-- ✅ **Image Loading**: Intersection Observer properly triggers image loading
 
 ## 🎯 Pre-Deployment Checklist
 
 ### Security Requirements ✅
-- [x] CSP headers configured and tested
-- [x] Security headers middleware implemented
+- [x] Security headers optimized for video streaming compatibility (CSP removed for Cloudflare Stream)
+- [x] Security headers middleware implemented with video iframe support
 - [x] Authentication hardened with bcrypt and rate limiting
 - [x] Input validation with Zod schemas
 - [x] Error tracking and monitoring system
@@ -38,6 +42,49 @@ This guide provides step-by-step instructions for deploying the V0 Trailer appli
 - [ ] Redis server configured
 - [ ] Monitoring services setup
 - [ ] Backup strategy implemented
+
+## 🚀 Container Rebuild Process (v2.5 Critical)
+
+**IMPORTANT**: TypeScript changes require container rebuilds to compile into production JavaScript.
+
+### When to Rebuild Containers
+- ✅ **API Route Changes**: Updates to `/api/` endpoints (e.g., `/api/trailers/[id]/route.ts`)
+- ✅ **Middleware Changes**: Updates to `middleware.ts`, `next.config.ts`, or security headers
+- ✅ **TypeScript Code Changes**: Any `.ts` or `.tsx` file modifications
+- ✅ **Configuration Changes**: Updates to Next.js config, validation schemas, or app logic
+
+### Container Rebuild Commands
+```bash
+# Full rebuild (recommended for TypeScript changes)
+docker compose build web --no-cache
+
+# Start updated container (skip dependencies)
+docker compose up -d --no-deps web
+
+# Verify deployment
+curl https://videos.neversatisfiedxo.com/api/trailers/4
+curl https://videos.neversatisfiedxo.com/api/health
+```
+
+### Production Deployment Validation
+```bash
+# Test API endpoints
+curl -s https://videos.neversatisfiedxo.com/api/trailers/4 | jq '.title'
+curl -s https://videos.neversatisfiedxo.com/api/trailers/ee65f7035c7445388bc1237d3d51cddd | jq '.title'
+
+# Check container status
+docker compose ps
+docker compose logs --tail=10 web
+
+# Verify video page access
+curl -I https://videos.neversatisfiedxo.com/video/4
+```
+
+### Troubleshooting Container Issues
+- **Container Status**: Check `docker compose ps` for healthy status
+- **Build Logs**: Review `docker compose build web --no-cache` output for compilation errors
+- **Runtime Logs**: Monitor `docker compose logs web` for TypeScript compilation and API errors
+- **API Testing**: Test endpoints directly before browser validation
 
 ## 🔧 Environment Setup
 

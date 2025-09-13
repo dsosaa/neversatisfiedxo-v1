@@ -39,7 +39,7 @@ interface PerformanceMonitorProps {
 export function CloudflarePerformanceMonitor({
   className,
   enableRealTimeUpdates = true,
-  updateInterval = 30000, // 30 seconds
+  updateInterval = 300000, // 5 minutes (reduced frequency)
 }: PerformanceMonitorProps) {
   const [metrics, setMetrics] = useState<CloudflareMetrics>({
     cacheHitRatio: 0,

@@ -6,6 +6,7 @@ import { type Trailer } from '@/lib/types'
 import fs from 'fs'
 import path from 'path'
 import Papa from 'papaparse'
+import { getVideoUID, hasVideoMapping } from '@/lib/video-mapping'
 
 // Server-side direct data loading (avoiding network calls during SSR)
 function loadTrailerDataDirect() {
@@ -86,11 +87,16 @@ function loadTrailerDataDirect() {
         }
       }
       
+      const videoNum = parseInt(videoNumber, 10) || index
+      
+      // Use video mapping to get the correct Cloudflare video UID
+      const mappedUID = hasVideoMapping(videoNum) ? getVideoUID(videoNum) : videoId
+      
       const trailer = {
         id: videoId,
-        cf_video_uid: videoId,
+        cf_video_uid: mappedUID, // Use mapped UID if available
         cf_thumb_uid: String(row['Thumbnail ID'] || ''),
-        video_number: parseInt(videoNumber, 10) || index,
+        video_number: videoNum,
         title: String(row['Description'] || 'Untitled'),
         description: String(row['Detailed Description'] || ''),
         price: priceStr,

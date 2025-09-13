@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import Papa from 'papaparse'
+import { getVideoUID, hasVideoMapping, MAPPING_STATS } from '../../../lib/video-mapping'
 
 // Type for trailer data
 interface TrailerData {
@@ -96,21 +97,27 @@ function loadTrailerData(): TrailerData[] {
     
     data.forEach((row: Record<string, unknown>, index: number) => {
       const videoNumber = String(row['Video Number'] || '').replace('Video ', '').trim()
-      const videoId = String(row['Video ID'] || '').trim()
+      const csvVideoId = String(row['Video ID'] || '').trim()
       
       // Skip if essential data is missing
-      if (!videoNumber || !videoId) {
+      if (!videoNumber || !csvVideoId) {
         return
       }
+      
+      const videoNum = parseInt(videoNumber, 10) || index
+      
+      // Get real Cloudflare video UID from our mapping, fallback to CSV ID
+      const realVideoUID = getVideoUID(videoNum) || csvVideoId
+      const hasRealMapping = hasVideoMapping(videoNum)
       
       const priceStr = String(row['Price'] || 'FREE')
       const lengthStr = String(row['Length'] || '')
       
       const trailer: TrailerData = {
-        id: videoId, // Use Cloudflare video ID as primary key
-        cf_video_uid: videoId,
+        id: realVideoUID, // Use real Cloudflare video UID as primary key
+        cf_video_uid: realVideoUID,
         cf_thumb_uid: String(row['Thumbnail ID'] || ''),
-        video_number: parseInt(videoNumber, 10) || index,
+        video_number: videoNum,
         title: String(row['Description'] || 'Untitled'),
         description: String(row['Detailed Description'] || ''),
         price: priceStr,
@@ -118,7 +125,7 @@ function loadTrailerData(): TrailerData[] {
         length: lengthStr,
         length_minutes: parseLength(lengthStr),
         creators: String(row['Creators'] || ''),
-        upload_status: String(row['Upload Status'] || 'Complete'),
+        upload_status: hasRealMapping ? 'Complete' : 'Unavailable', // Mark unmapped videos
         is_featured: false,
         is_premium: parsePrice(priceStr) > 0,
         created_at: new Date().toISOString(), // Default timestamp
@@ -227,11 +234,22 @@ export async function GET(request: NextRequest) {
     const endIndex = startIndex + pageSize
     const paginatedTrailers = trailers.slice(startIndex, endIndex)
     
+    // Calculate mapping statistics for debug info
+    const mappedVideos = trailers.filter(t => hasVideoMapping(t.video_number))
+    const unmappedVideos = trailers.filter(t => !hasVideoMapping(t.video_number))
+    
     const response = {
       count: totalCount,
       next: endIndex < totalCount ? `${request.url.split('?')[0]}?page=${page + 1}` : null,
       previous: page > 1 ? `${request.url.split('?')[0]}?page=${page - 1}` : null,
-      results: paginatedTrailers
+      results: paginatedTrailers,
+      mapping_info: {
+        total_videos_in_csv: trailers.length,
+        videos_with_real_mapping: mappedVideos.length,
+        videos_without_mapping: unmappedVideos.length,
+        total_available_mappings: MAPPING_STATS.totalMappings,
+        mapping_coverage: `${Math.round((mappedVideos.length / trailers.length) * 100)}%`
+      }
     }
     
     return NextResponse.json(response)

@@ -36,6 +36,16 @@ help:
 	@echo "  clean            Clean all containers and volumes"
 	@echo "  setup            Initial project setup"
 	@echo "  health           Check system health"
+	@echo ""
+	@echo "Issue Prevention & Troubleshooting (v2.4.1):"
+	@echo "  validate-env           Validate environment variables"
+	@echo "  validate-deployment    Run deployment validation tests"
+	@echo "  deploy-validated       Deploy with comprehensive validation"
+	@echo "  fix-cloudflare-env     Fix Cloudflare environment variable loading"
+	@echo "  fix-nginx-images       Fix nginx image optimization routing"
+	@echo "  test-video-player      Test video player configuration"
+	@echo "  test-image-optimization Test Next.js image optimization"
+	@echo "  troubleshoot-all       Run comprehensive troubleshooting"
 
 # Development Commands
 dev:
@@ -259,32 +269,83 @@ deploy-complete:
 # Setup nginx and SSL on existing deployment
 setup-nginx:
 	@echo "🌐 Setting up nginx and SSL certificates..."
-	rsync -avz config/nginx-site.conf root@82.180.137.156:/opt/neversatisfiedxo/config/
-	rsync -avz scripts/setup-nginx-ssl.sh root@82.180.137.156:/opt/neversatisfiedxo/scripts/
-	ssh root@82.180.137.156 "cd /opt/neversatisfiedxo && chmod +x scripts/setup-nginx-ssl.sh && ./scripts/setup-nginx-ssl.sh"
+	rsync -avz -e "ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no" config/nginx-site.conf root@82.180.137.156:/opt/neversatisfiedxo/config/
+	rsync -avz -e "ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no" scripts/setup-nginx-ssl.sh root@82.180.137.156:/opt/neversatisfiedxo/scripts/
+	ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no root@82.180.137.156 "cd /opt/neversatisfiedxo && chmod +x scripts/setup-nginx-ssl.sh && ./scripts/setup-nginx-ssl.sh"
 
 # Test website functionality
 test-website:
 	@echo "🧪 Testing website functionality..."
-	rsync -avz scripts/test-website.sh root@82.180.137.156:/opt/neversatisfiedxo/scripts/
-	ssh root@82.180.137.156 "cd /opt/neversatisfiedxo && chmod +x scripts/test-website.sh && ./scripts/test-website.sh"
+	rsync -avz -e "ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no" scripts/test-website.sh root@82.180.137.156:/opt/neversatisfiedxo/scripts/
+	ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no root@82.180.137.156 "cd /opt/neversatisfiedxo && chmod +x scripts/test-website.sh && ./scripts/test-website.sh"
 
 # Nginx-specific operations
 nginx-status:
-	ssh root@82.180.137.156 "systemctl status nginx"
+	ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no root@82.180.137.156 "systemctl status nginx"
 
 nginx-logs:
-	ssh root@82.180.137.156 "tail -f /var/log/nginx/error.log"
+	ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no root@82.180.137.156 "tail -f /var/log/nginx/error.log"
 
 nginx-reload:
-	ssh root@82.180.137.156 "nginx -t && systemctl reload nginx"
+	ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no root@82.180.137.156 "nginx -t && systemctl reload nginx"
 
 # SSL certificate operations
 ssl-status:
-	ssh root@82.180.137.156 "certbot certificates"
+	ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no root@82.180.137.156 "certbot certificates"
 
 ssl-renew:
-	ssh root@82.180.137.156 "certbot renew --dry-run"
+	ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no root@82.180.137.156 "certbot renew --dry-run"
+
+# Issue prevention and troubleshooting commands (v2.4.1)
+validate-env:
+	@echo "🔍 Validating environment variables..."
+	@./scripts/validate-environment.sh
+
+validate-deployment:
+	@echo "🧪 Running deployment validation tests..."
+	@./scripts/test-deployment-fixes.sh
+
+deploy-validated:
+	@echo "🚀 Deploying with comprehensive validation..."
+	@./scripts/deploy-with-validation.sh
+
+# Troubleshooting commands for known issues
+fix-cloudflare-env:
+	@echo "🔧 Fixing Cloudflare environment variable loading..."
+	ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no root@82.180.137.156 "cd /opt/neversatisfiedxo && docker compose restart web"
+	@echo "✅ Web service restarted to reload environment variables"
+
+fix-nginx-images:
+	@echo "🔧 Fixing nginx image optimization routing..."
+	rsync -avz -e "ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no" config/nginx-site.conf root@82.180.137.156:/etc/nginx/sites-available/videos.neversatisfiedxo.com
+	ssh -i ~/.ssh/hostinger_deploy_ed25519 -o StrictHostKeyChecking=no root@82.180.137.156 "nginx -t && systemctl reload nginx"
+	@echo "✅ Nginx configuration updated and reloaded"
+
+test-video-player:
+	@echo "🎥 Testing video player configuration..."
+	@echo "Testing Cloudflare customer code accessibility..."
+	@curl -s 'https://videos.neversatisfiedxo.com/test-video' -b /tmp/test_cookies.txt | grep -o 'NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE[^<]*' || echo "⚠️  Need to authenticate first"
+	@echo ""
+	@echo "To authenticate: curl -X POST 'https://videos.neversatisfiedxo.com/api/gate' -H 'Content-Type: application/json' -d '{\"password\": \"yesmistress\"}' -c /tmp/test_cookies.txt"
+
+test-image-optimization:
+	@echo "🖼️  Testing Next.js image optimization..."
+	@curl -I 'https://videos.neversatisfiedxo.com/_next/image?url=/neversatisfiedxo-logo.png&w=200&q=75' | grep -E "(HTTP|Cache-Control)" || echo "❌ Image optimization not working"
+
+troubleshoot-all:
+	@echo "🔍 Running comprehensive troubleshooting..."
+	@echo ""
+	@echo "1. Environment Variables:"
+	@make validate-env
+	@echo ""
+	@echo "2. Container Status:"
+	@make production-status
+	@echo ""
+	@echo "3. Nginx Status:"
+	@make nginx-status
+	@echo ""
+	@echo "4. Deployment Validation:"
+	@make validate-deployment
 
 # Quick development validation (prevents deployment issues)
 dev-validate: validate-env validate-docker

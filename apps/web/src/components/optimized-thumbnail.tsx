@@ -41,12 +41,12 @@ export function OptimizedThumbnail({
     )
   }
 
-  // Generate optimized thumbnail URL following Cloudflare Stream best practices
-  // Use responsive dimensions and optimal quality settings as per official docs
-  const thumbnailUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?time=5s&height=720&quality=85&fit=crop`
+  // Generate high-quality thumbnail URL with 15ms timestamp for better frame capture
+  // Use WebP format for better compression and quality
+  const thumbnailUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?time=0.015s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`
   
   // Fallback to a different timestamp with same quality if default fails
-  const fallbackUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?time=10s&height=720&quality=85&fit=crop`
+  const fallbackUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?time=0.03s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`
 
   if (hasError) {
     return (
@@ -111,7 +111,7 @@ export function OptimizedThumbnail({
         )}
         sizes={sizes}
         priority={priority}
-        quality={85}
+        quality={95}
         placeholder="blur"
         blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGBkRMUIjH/xAAVAQEBAAAAAAAAAAAAAAAAAAABBP/EABcRAAMBAAAAAAAAAAAAAAAAAAECEQA/2gAMAwEAAhEDEQA/AKrjUyy3qIUvL5P04hKE3TIEqf6nYH6B"
         onLoad={() => setIsLoading(false)}
@@ -177,7 +177,7 @@ export function CompactThumbnail({
     )
   }
 
-  const thumbnailUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?height=400&quality=80&fit=crop`
+  const thumbnailUrl = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?time=0.015s&width=800&height=450&quality=90&fit=crop&format=webp`
 
   return (
     <div className={cn('relative aspect-video rounded-lg overflow-hidden', className)}>
@@ -187,7 +187,7 @@ export function CompactThumbnail({
         fill
         className="object-cover"
         sizes={sizes}
-        quality={75}
+        quality={90}
         onError={() => setHasError(true)}
       />
     </div>

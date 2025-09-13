@@ -10,52 +10,46 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
   autoplay = false,
   muted = true,
   className,
-  poster,
+  poster: _poster,
 }: CloudflarePlayerProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
+  // const [debugInfo] = useState<string>('')
   // Unified browser experience - no browser detection needed
 
-  const customerCode = useMemo(() => process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE, [])
+  // Customer code is handled directly in the stream URL construction
 
-  // Memoize stream URL construction optimized for 4K support
+  // Memoize stream URL construction optimized for fast loading
   const streamUrl = useMemo(() => {
     if (!uid) return ''
     
-    // Use customer-specific URL for proper Cloudflare Stream integration
+    // Use standard Cloudflare Stream iframe URL with minimal parameters for faster loading
     const baseUrl = `https://iframe.videodelivery.net/${uid}`
     const params = new URLSearchParams()
     
+    // Essential parameters only - remove unnecessary ones that slow down loading
     if (autoplay) params.append('autoplay', 'true')
     if (muted) params.append('muted', 'true')
-    if (poster) params.append('poster', poster)
     
-    // Essential parameters for optimal quality
-    params.append('preload', 'metadata')
+    // Optimized for fast loading with high quality support
+    params.append('preload', 'none') // Don't preload to speed up initial load
     params.append('controls', 'true')
-    
-    // Key parameters to ensure maximum quality availability
-    params.append('primaryColor', '3b82f6')
-    params.append('letterboxColor', 'transparent')
-    
-    // IMPORTANT: These parameters help ensure all quality levels are available
-    // The iframe player will automatically show 2160p if the source supports it
     params.append('responsive', 'true')
+    
+    // Enable high quality video playback (4K/2160p support)
+    params.append('quality', 'auto') // Enable adaptive quality including 4K
+    params.append('primaryColor', '3b82f6') // Sky blue theme
+    params.append('letterboxColor', 'transparent')
     params.append('defaultTextTrack', 'off')
     
-    // Add customer code for proper authentication
-    if (customerCode) {
-      params.append('customerCode', customerCode)
-    }
-    
-    // Unified cross-browser optimizations - works consistently across all browsers
-    params.set('preload', 'metadata') // Standard preloading for all browsers
-    params.append('quality', 'auto')
+    // Performance optimizations
     params.append('speed', '1')
+    params.append('enablePictureInPicture', 'true')
+    params.append('enableKeyboardShortcuts', 'true')
     
     const queryString = params.toString()
     return `${baseUrl}${queryString ? `?${queryString}` : ''}`
-  }, [uid, autoplay, muted, poster, customerCode])
+  }, [uid, autoplay, muted])
 
   // Alternative: Direct video source URLs for manual quality selection (unused for now)
   // const directVideoUrls = useMemo(() => {
@@ -77,16 +71,27 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
     }
   }, [uid])
 
-  const handleError = useCallback(() => {
+  const handleError = useCallback((event?: React.SyntheticEvent<HTMLIFrameElement, Event>) => {
     setIsLoading(false)
     setHasError(true)
     
-    // Enhanced error logging for development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('🎥 Video error:', {
-        uid,
-        streamUrl
-      })
+    // Enhanced error logging for all environments
+    console.error('🚨 Cloudflare Stream Error:', {
+      uid,
+      streamUrl,
+      error: event ? 'iframe_load_error' : 'unknown_error',
+      timestamp: new Date().toISOString(),
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'N/A'
+    })
+    
+    // Test accessibility of the video
+    if (typeof window !== 'undefined') {
+      const testUrls = [
+        `https://iframe.videodelivery.net/${uid}`,
+        `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg`
+      ]
+      
+      console.log('🔍 Testing video accessibility:', { uid, testUrls })
     }
   }, [uid, streamUrl])
 
@@ -95,22 +100,7 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
     setIsLoading(true)
   }, [])
 
-  // Early returns after all hooks
-  if (!customerCode) {
-    console.error('NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE is not configured')
-    return (
-      <div className={cn(
-        'aspect-video bg-muted rounded-2xl flex items-center justify-center',
-        className
-      )}>
-        <div className="text-center">
-          <p className="text-muted-foreground mb-2">Player configuration error</p>
-          <p className="text-xs text-muted-foreground">Missing Cloudflare customer code</p>
-        </div>
-      </div>
-    )
-  }
-
+  // Early returns after all hooks  
   if (!uid) {
     return (
       <div className={cn(
@@ -128,14 +118,28 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
         'aspect-video bg-muted rounded-2xl flex items-center justify-center',
         className
       )}>
-        <div className="text-center">
-          <p className="text-muted-foreground mb-2">Unable to load video</p>
-          <button 
-            onClick={handleRetry}
-            className="text-sm text-primary hover:underline"
-          >
-            Retry
-          </button>
+        <div className="text-center p-4">
+          <p className="text-red-400 font-semibold mb-2">🚨 Video Not Found</p>
+          <p className="text-muted-foreground text-xs mb-2">
+            Video ID: <code className="bg-zinc-800 px-1 rounded">{uid}</code>
+          </p>
+          <p className="text-muted-foreground text-xs mb-3">
+            This video does not exist in Cloudflare Stream
+          </p>
+          <div className="space-y-2">
+            <button 
+              onClick={handleRetry}
+              className="block w-full text-sm text-primary hover:underline"
+            >
+              Retry Loading
+            </button>
+            <button 
+              onClick={() => console.log('🔍 Debug Info:', { uid, streamUrl })}
+              className="block w-full text-xs text-muted-foreground hover:underline"
+            >
+              Show Debug Info
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -157,7 +161,8 @@ export const CloudflarePlayer = memo(function CloudflarePlayer({
         allowFullScreen
         onLoad={handleLoad}
         onError={handleError}
-        loading="eager"
+        loading="lazy"
+        sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
       />
     </div>
   )

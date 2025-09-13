@@ -1,14 +1,11 @@
 'use client'
 
 import { useState, useMemo, useCallback, memo } from 'react'
-import { OptimizedImage } from '@/components/optimized-image'
+import { LazyVideoPlayer } from '@/components/lazy-video-player'
+// import { AdvancedImageLoader } from '@/components/advanced-image-loader'
 import { Play, Clock, Film, DollarSign, User, Eye } from '@/lib/icons'
 import { Card, CardContent } from '@/components/ui/card'
 import { m, conditionalMotion, motionPresets } from '@/lib/motion'
-import { useSmartPreload } from '@/hooks/use-intersection-observer'
-import { usePreloadService } from '@/lib/preload-service'
-import { useImageFallback } from '@/hooks/use-image-fallback'
-import { ThumbnailSkeleton } from '@/components/enhanced-skeleton'
 import type { TrailerCardProps } from '@/lib/types'
 import { formatPrice, parseLength, formatLength, parsePrice } from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -73,80 +70,10 @@ const UnifiedBadge = ({ variant, children, icon, className }: { variant: 'primar
 export const TrailerCard = memo(function TrailerCard({ trailer, onPreview }: TrailerCardProps) {
   const [showFullDescription, setShowFullDescription] = useState(false)
   const prefersReducedMotion = useReducedMotion()
-  const preloadService = usePreloadService()
 
   // Memoize expensive calculations
   const price = useMemo(() => parsePrice(trailer.price), [trailer.price])
   const lengthInMinutes = useMemo(() => parseLength(trailer.length), [trailer.length])
-  
-  // Optimized responsive thumbnail URLs with fallback handling
-  const thumbnailUrls = useMemo(() => {
-    const customerCode = process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE
-    if (!customerCode || !trailer.cf_video_uid) {
-      return null
-    }
-    
-    // Use the correct Cloudflare Stream thumbnail URL format with video UID and timestamp
-    const baseUrl = `https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg`
-    const fallbackBaseUrl = `https://customer-${customerCode}.cloudflarestream.com/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg`
-    
-    return {
-      // Enhanced responsive sizes with fallback URLs
-      small: `${baseUrl}?time=5s&width=480&height=270&quality=88&fit=crop&format=webp&sharpen=1`,
-      medium: `${baseUrl}?time=5s&width=960&height=540&quality=90&fit=crop&format=webp&sharpen=1`,
-      large: `${baseUrl}?time=5s&width=1440&height=810&quality=95&fit=crop&format=webp&sharpen=1`,
-      // Ultra-high quality for hover/preview
-      ultra: `${baseUrl}?time=5s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`,
-      // Blur placeholder - tiny, fast-loading version
-      placeholder: `${baseUrl}?time=5s&width=40&height=23&quality=75&fit=crop&format=webp`,
-      // Fallback URLs for 400 errors
-      fallbacks: {
-        small: `${fallbackBaseUrl}?time=5s&width=480&height=270&quality=88&fit=crop&format=webp`,
-        medium: `${fallbackBaseUrl}?time=5s&width=960&height=540&quality=90&fit=crop&format=webp`,
-        large: `${fallbackBaseUrl}?time=5s&width=1440&height=810&quality=95&fit=crop&format=webp`
-      }
-    }
-  }, [trailer.cf_video_uid])
-  
-        // Enhanced image loading with fallback and retry logic
-        const {
-          currentUrl: thumbnailUrl,
-          hasError: imageError,
-          retry: retryImage,
-          handleLoad: handleImageLoad,
-          handleError: handleImageError
-        } = useImageFallback(
-          thumbnailUrls?.medium || null,
-          {
-            maxRetries: 2,
-            retryDelay: 1000,
-            fallbackUrls: thumbnailUrls?.fallbacks ? [
-              thumbnailUrls.fallbacks.medium,
-              thumbnailUrls.fallbacks.small
-            ] : []
-          }
-        )
-
-  // Smart preloading with intersection observer
-  const { elementRef } = useSmartPreload<HTMLDivElement>(
-    async () => {
-      if (thumbnailUrls && preloadService) {
-        // Preload multiple sizes for responsive behavior
-        await preloadService.preloadImages([
-          thumbnailUrls.medium,
-          thumbnailUrls.large
-        ], { 
-          priority: 'auto',
-          timeout: 8000
-        })
-      }
-    },
-    {
-      rootMargin: '100px', // Start preloading 100px before visibility
-      priority: 'auto',
-      connectionType: 'auto'
-    }
-  )
 
   // Memoize formatted values
   const formattedPrice = useMemo(() => formatPrice(price), [price])
@@ -181,7 +108,6 @@ export const TrailerCard = memo(function TrailerCard({ trailer, onPreview }: Tra
 
   return (
     <m.div
-      ref={elementRef}
       {...conditionalMotion(motionPresets.slideUp, prefersReducedMotion)}
       {...conditionalMotion(motionPresets.cardHover, prefersReducedMotion)}
       className="group cursor-pointer focus:outline-none"
@@ -193,26 +119,14 @@ export const TrailerCard = memo(function TrailerCard({ trailer, onPreview }: Tra
     >
       <Card className="h-full flex flex-col overflow-hidden border border-zinc-800/40 hover:border-zinc-600/60 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/30 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950 transition-all duration-300 rounded-2xl shadow-xl hover:shadow-2xl bg-gradient-to-br from-zinc-950/95 via-zinc-900/90 to-zinc-950/95 backdrop-blur-md hover:scale-[1.02] group-hover:shadow-sky-500/10">
         <div className="relative aspect-[16/9] bg-muted rounded-t-2xl overflow-hidden">
-          {/* Enhanced thumbnail with fallback and retry */}
-          {thumbnailUrl ? (
-            <OptimizedImage
-              src={thumbnailUrl}
-              alt={`Thumbnail for ${trailer.title} video trailer`}
-              fill
-              className="object-cover transition-all duration-300 group-hover:scale-105"
-              sizes="(max-width: 640px) 480px, (max-width: 1024px) 480px, 480px"
-              priority={false}
-              quality={85}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-            />
-          ) : (
-            <ThumbnailSkeleton 
-              className="w-full h-full rounded-t-2xl" 
-              showRetry={imageError}
-              onRetry={imageError ? retryImage : undefined}
-            />
-          )}
+          {/* Lazy loading video player - only loads video on hover/click */}
+          <LazyVideoPlayer
+            uid={trailer.cf_video_uid}
+            autoplay={false}
+            muted={true}
+            className="w-full h-full rounded-t-2xl"
+            triggerOnHover={true}
+          />
 
           {/* Gradient scrim for badges */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/0 via-black/0 to-black/60 rounded-t-2xl pointer-events-none" />
@@ -378,55 +292,6 @@ export const TrailerListItem = memo(function TrailerListItem({ trailer, onPrevie
   // Memoize expensive calculations
   const price = useMemo(() => parsePrice(trailer.price), [trailer.price])
   const lengthInMinutes = useMemo(() => parseLength(trailer.length), [trailer.length])
-  
-  // Optimized responsive thumbnail URLs for list view with fallback handling
-  const thumbnailUrls = useMemo(() => {
-    const customerCode = process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE
-    if (!customerCode || !trailer.cf_video_uid) {
-      console.log('List view thumbnail URL generation failed:', { customerCode, cf_video_uid: trailer.cf_video_uid, trailer })
-      return null
-    }
-    
-    // Use the correct Cloudflare Stream thumbnail URL format with video UID and timestamp
-    const baseUrl = `https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg`
-    const fallbackBaseUrl = `https://customer-${customerCode}.cloudflarestream.com/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg`
-    
-    console.log('Generated list view thumbnail URLs:', { baseUrl, fallbackBaseUrl, cf_video_uid: trailer.cf_video_uid })
-    
-    return {
-      // Enhanced list view with fallback URLs
-      small: `${baseUrl}?width=280&height=158&quality=88&fit=crop&format=webp&sharpen=1`,
-      medium: `${baseUrl}?width=560&height=315&quality=90&fit=crop&format=webp&sharpen=1`,
-      large: `${baseUrl}?width=840&height=473&quality=95&fit=crop&format=webp&sharpen=1`,
-      // Blur placeholder - tiny, fast-loading version
-      placeholder: `${baseUrl}?width=40&height=23&quality=75&fit=crop&format=webp`,
-      // Fallback URLs for 400 errors
-      fallbacks: {
-        small: `${fallbackBaseUrl}?width=280&height=158&quality=88&fit=crop&format=webp`,
-        medium: `${fallbackBaseUrl}?width=560&height=315&quality=90&fit=crop&format=webp`,
-        large: `${fallbackBaseUrl}?width=840&height=473&quality=95&fit=crop&format=webp`
-      }
-    }
-  }, [trailer])
-  
-  // Enhanced image loading with fallback and retry logic - restored for consistency with grid view
-  const {
-    currentUrl: thumbnailUrl,
-    hasError: imageError,
-    retry: retryImage,
-    handleLoad: handleImageLoad,
-    handleError: handleImageError
-  } = useImageFallback(
-    thumbnailUrls?.medium || null,
-    {
-      maxRetries: 2,
-      retryDelay: 1000,
-      fallbackUrls: thumbnailUrls?.fallbacks ? [
-        thumbnailUrls.fallbacks.medium,
-        thumbnailUrls.fallbacks.small
-      ] : []
-    }
-  )
 
   // Memoize formatted values
   const formattedPrice = useMemo(() => formatPrice(price), [price])
@@ -475,27 +340,15 @@ export const TrailerListItem = memo(function TrailerListItem({ trailer, onPrevie
     >
       <Card className="overflow-hidden border border-zinc-800/40 hover:border-zinc-600/60 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/30 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950 transition-all duration-300 rounded-2xl shadow-xl hover:shadow-2xl bg-gradient-to-br from-zinc-950/95 via-zinc-900/90 to-zinc-950/95 backdrop-blur-md group-hover:shadow-sky-500/10">
         <div className="flex gap-6 p-6">
-          {/* Enhanced thumbnail rendering with fallback support */}
+          {/* Lazy loading video player - only loads video on hover/click */}
           <div className="relative w-56 aspect-[16/9] bg-muted rounded-xl overflow-hidden flex-shrink-0">
-            {thumbnailUrl ? (
-              <OptimizedImage
-                src={thumbnailUrl}
-                alt={`Thumbnail for ${trailer.title} video trailer`}
-                fill
-                className="object-cover transition-all duration-300 group-hover:scale-105"
-                sizes="280px"
-                priority={false}
-                quality={85}
-                onLoad={handleImageLoad}
-                onError={handleImageError}
-              />
-            ) : (
-              <ThumbnailSkeleton 
-                className="w-full h-full rounded-xl" 
-                showRetry={imageError}
-                onRetry={imageError ? retryImage : undefined}
-              />
-            )}
+            <LazyVideoPlayer
+              uid={trailer.cf_video_uid}
+              autoplay={false}
+              muted={true}
+              className="w-full h-full rounded-xl"
+              triggerOnHover={true}
+            />
 
             {/* Upload status indicator - only show if not complete - HIDDEN */}
             {false && trailer.upload_status !== 'Complete' && (

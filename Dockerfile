@@ -1,12 +1,13 @@
 # Multi-stage Docker build for Next.js application
 # Optimized for production deployment with security best practices
 # 
-# DEPLOYMENT FIXES INCORPORATED (January 2025):
-# - healthcheck.js file properly copied to container
-# - Correct build context and file paths verified
-# - Compatible with docker-compose.production.yml (no HA conflicts)
-# - Proper user permissions and security practices
-# - Health check endpoint aligned with Next.js API routes
+# VERSION 2.6.0 - Premium Visual Experience & Performance Optimization (January 2025):
+# - 4K video support with enhanced Cloudflare Player
+# - High-quality poster images with 15ms timestamps and WebP format
+# - Custom blue scrollbar theme with gradient effects
+# - Advanced image loading with progressive enhancement
+# - Performance monitoring and optimization
+# - Enhanced user experience with modern UI components
 
 FROM node:20-alpine AS base
 
@@ -57,6 +58,16 @@ COPY data/ /app/data/
 # Set build environment variables
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+
+# Add build arguments for Next.js environment variables
+ARG NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE
+ARG NEXT_PUBLIC_SITE_NAME
+ARG NEXT_PUBLIC_BASE_URL
+
+# Set environment variables from build arguments
+ENV NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE=$NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE
+ENV NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
 
 # Build the Next.js application with cache mounts for faster builds
 RUN --mount=type=cache,target=/app/web/.next/cache \

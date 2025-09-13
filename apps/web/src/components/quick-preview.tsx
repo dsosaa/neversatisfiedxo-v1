@@ -6,7 +6,7 @@ import { X, ExternalLink, Clock, DollarSign, User, Film } from '@/lib/icons'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { VisuallyHidden } from '@/components/ui/visually-hidden'
 import { Button } from '@/components/ui/button'
-import { CloudflarePlayer } from '@/components/cloudflare-player'
+import { InstantVideoPlayer } from '@/components/instant-video-player'
 import type { QuickPreviewProps } from '@/lib/types'
 import { formatPrice, parseLength, formatLength, parsePrice } from '@/lib/api'
 import { useReducedMotion } from '@/hooks/use-reduced-motion'
@@ -49,6 +49,9 @@ export function QuickPreview({ trailer, open, onOpenChange }: QuickPreviewProps)
   const [isPlayerReady, setIsPlayerReady] = useState(false)
   const prefersReducedMotion = useReducedMotion()
   const focusTrapRef = useFocusTrap<HTMLDivElement>(open)
+  
+  // Video loading state
+  const [_isVideoLoading, setIsVideoLoading] = useState(true)
 
   useEffect(() => {
     if (open && trailer) {
@@ -124,12 +127,23 @@ export function QuickPreview({ trailer, open, onOpenChange }: QuickPreviewProps)
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <CloudflarePlayer
+                    <InstantVideoPlayer
                       uid={trailer.cf_video_uid}
                       autoplay={true}
                       muted={true}
                       className="rounded-none"
-                      poster={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=5s&width=1920&height=1080&quality=95&fit=crop&format=webp&sharpen=1`}
+                      enable4K={true}
+                      qualityPreference="auto"
+                      bandwidthHint="high"
+                      enablePreloading={true}
+                      enableAdaptiveQuality={true}
+                      enableAnalytics={false}
+                      onLoadStart={() => setIsVideoLoading(true)}
+                      onLoadComplete={() => setIsVideoLoading(false)}
+                      onError={(error) => {
+                        console.error('Video loading error:', error)
+                        setIsVideoLoading(false)
+                      }}
                     />
                   </m.div>
                 )}
