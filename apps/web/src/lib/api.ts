@@ -10,15 +10,15 @@ class ApiClient {
 
 
   // Auth endpoints - Use frontend API (localhost:3000), not MediaCMS backend
-  async verifyPassword(password: string): Promise<AuthResponse> {
+  async verifyPassword(accessCode: string): Promise<AuthResponse> {
     const frontendBaseURL = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
     
-    const response = await fetch(`${frontendBaseURL}/api/gate`, {
+    const response = await fetch(`${frontendBaseURL}/api/auth/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ accessCode }),
     })
 
     if (!response.ok) {
