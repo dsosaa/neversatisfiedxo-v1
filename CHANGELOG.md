@@ -4,6 +4,14 @@ All notable changes to the neversatisfiedxo Premium Trailer Gallery project are 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.2] - 2025-01-15
+
+### 🔐 Authentication Connection Fix
+- **Fixed Authentication API**: Corrected API client to call proper endpoint (/api/auth/verify)
+- **Resolved Connection Failure**: Fixed parameter mismatch causing authentication errors
+- **Enhanced Error Handling**: Improved error handling for authentication requests
+- **Production Deployment**: Successfully deployed fix to production environment
+
 ## [2.6.0] - 2025-01-15
 
 ### 🎨 Premium Visual Experience & Performance Optimization

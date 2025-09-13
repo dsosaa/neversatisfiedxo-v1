@@ -1,4 +1,4 @@
-# neversatisfiedxo Premium Trailer Gallery v2.6.0
+# neversatisfiedxo Premium Trailer Gallery v2.6.2
 
 ## Project Overview
 

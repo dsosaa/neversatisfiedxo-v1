@@ -1,5 +1,5 @@
 # Docker Compose configuration - version removed for modern Docker Compose
-# v2.6.0 - Premium Visual Experience & Performance Optimization
+# v2.6.2 - Premium Visual Experience & Performance Optimization
 # Features: 4K video support, high-quality posters, blue scrollbar theme, advanced image loading
 # For TypeScript changes, rebuild containers: docker compose build web --no-cache
 

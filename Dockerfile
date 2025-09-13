@@ -1,7 +1,7 @@
 # Multi-stage Docker build for Next.js application
 # Optimized for production deployment with security best practices
 # 
-# VERSION 2.6.0 - Premium Visual Experience & Performance Optimization (January 2025):
+# VERSION 2.6.2 - Premium Visual Experience & Performance Optimization (January 2025):
 # - 4K video support with enhanced Cloudflare Player
 # - High-quality poster images with 15ms timestamps and WebP format
 # - Custom blue scrollbar theme with gradient effects
