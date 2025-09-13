@@ -4,6 +4,15 @@ All notable changes to the neversatisfiedxo Premium Trailer Gallery project are 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.3] - 2025-01-15
+
+### 🔐 Authentication Cookie Fix
+- **Fixed Cookie Value Mismatch**: Corrected authentication cookie to set `authenticated=authenticated` instead of `authenticated=true`
+- **Resolved Middleware Authentication**: Fixed middleware not recognizing authenticated users due to cookie value mismatch
+- **Fixed Gallery Access**: Users can now successfully access gallery after password authentication
+- **Production Deployment**: Deployed fix using container rebuild method with SSH key authentication
+- **Verified End-to-End**: Complete authentication flow now works from enter page to gallery
+
 ## [2.6.2] - 2025-01-15
 
 ### 🔐 Authentication Connection Fix

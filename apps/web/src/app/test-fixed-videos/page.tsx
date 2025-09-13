@@ -111,7 +111,7 @@ export default function TestFixedVideos() {
         <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-6">
           <h2 className="text-xl font-semibold mb-4 text-blue-300">🔧 Solution Summary</h2>
           <div className="space-y-3 text-sm">
-            <p><strong>Problem Found:</strong> All video IDs in the CSV are fake/placeholder data that don't exist in your Cloudflare Stream account.</p>
+            <p><strong>Problem Found:</strong> All video IDs in the CSV are fake/placeholder data that don&apos;t exist in your Cloudflare Stream account.</p>
             <p><strong>Solution Created:</strong> I mapped the real Cloudflare Stream video IDs to the corresponding video numbers from your CSV.</p>
             <p><strong>Working Videos:</strong> The videos above use real IDs and should play correctly.</p>
             <p><strong>Next Steps:</strong> Update the main API to use the real video ID mapping for all gallery videos.</p>

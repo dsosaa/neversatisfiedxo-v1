@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     if (accessCode === expectedPassword) {
       // Set authentication cookie
       const cookieStore = await cookies()
-      cookieStore.set('authenticated', 'true', {
+      cookieStore.set('authenticated', 'authenticated', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
