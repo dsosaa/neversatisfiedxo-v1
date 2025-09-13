@@ -67,6 +67,7 @@ Major visual and performance enhancements focusing on high-quality media deliver
 ### 🔐 Authentication & Security
 - **Enhanced Authentication Flow**: Fixed middleware cookie handling for seamless user experience
 - **Protected Gallery Access**: Gallery now requires proper authentication before access
+- **Root Path Protection**: Fixed middleware to redirect unauthenticated users from root to enter page
 - **Secure Cookie Management**: Proper cookie handling with HttpOnly and Secure flags
 - **Password Gateway**: Streamlined entry page with "yesmistress" access code
 

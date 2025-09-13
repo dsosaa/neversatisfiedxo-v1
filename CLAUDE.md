@@ -152,6 +152,7 @@ docker compose -f docker-compose.production.yml down --remove-orphans
 
 ### Authentication
 - **Password Protection**: Secure gallery access with "yesmistress" password
+- **Root Path Protection**: Middleware redirects unauthenticated users from root to enter page
 - **Session Management**: Redis-backed session storage for scalability
 - **Rate Limiting**: Protection against abuse and DDoS attacks
 - **CSP Headers**: Content Security Policy optimized for video streaming

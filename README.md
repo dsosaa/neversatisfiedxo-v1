@@ -27,7 +27,7 @@ A premium trailer gallery site built with **Next.js 15**, **MediaCMS**, and **Cl
 - **Advanced Image Loading**: Progressive loading with performance monitoring ✅ **ENHANCED**
 - **Performance Optimization**: Smart loading strategies and memory optimization ✅ **IMPROVED**
 - **Instant Video Loading**: Revolutionary video loading with animated progress indicators ✅ **NEW**
-- **Authentication Gateway**: Secure password-protected gallery access ✅ **ENHANCED**
+- **Authentication Gateway**: Secure password-protected gallery access with root path protection ✅ **ENHANCED**
 - **Enhanced UX**: Eliminated white screens with smooth loading transitions ✅ **IMPROVED**
 
 ### 🚀 **Technical Achievements**

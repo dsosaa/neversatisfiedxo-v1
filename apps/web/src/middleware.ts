@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const COOKIE_NAME = 'authenticated'
-const PROTECTED_PATHS = ['/video', '/gallery'] // Protected paths requiring authentication
+const PROTECTED_PATHS = ['/', '/video', '/gallery'] // Protected paths requiring authentication
 const PUBLIC_PATHS = ['/enter', '/api/gate', '/api/health', '/test-image', '/debug-videos', '/test-video-preview', '/test-poster']
 
 // Rate limiting configuration
@@ -296,9 +296,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // If authenticated and trying to access login page, redirect to gallery
-  if (isAuthenticated && pathname === '/enter') {
-    console.log('🔄 Redirecting authenticated user from /enter to /gallery')
+  // If authenticated and trying to access login page or root, redirect to gallery
+  if (isAuthenticated && (pathname === '/enter' || pathname === '/')) {
+    console.log('🔄 Redirecting authenticated user to /gallery')
     const galleryUrl = new URL('/gallery', request.url)
     return NextResponse.redirect(galleryUrl)
   }
