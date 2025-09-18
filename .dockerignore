@@ -1,3 +1,37 @@
+.git
+.gitignore
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+out
+build
+coverage
+*.log
+*.tsbuildinfo
+**/.turbo
+**/.cache
+apps/web/playwright-report
+apps/web/test-results
+apps/web/tests
+apps/web/playwright
+apps/web/.eslintcache
+apps/web/.next/cache/eslint
+apps/web/.next/cache
+apps/web/.tsbuildinfo
+apps/mediacms/db.sqlite3
+apps/mediacms/venv
+apps/mediacms/__pycache__
+venv
+.env
+.env.*
+docker-compose.*.yml
+docs
+*.png
+*.jpg
+*.jpeg
+*.svg
 # Build performance optimizations for Docker context
 
 # Dependencies (exclude from context, installed in container)

@@ -19,13 +19,13 @@
 services:
   # Next.js Frontend Application
   web:
+    image: v0_trailer_web
     build:
       context: .
       dockerfile: Dockerfile
       target: runner
-      # BuildKit cache optimization (disabled for local builds)
-      # cache_from:
-        # - v0_trailer_web:cache
+      cache_from:
+        - v0_trailer_web:latest
       # Parallel build arguments
       args:
         BUILDKIT_INLINE_CACHE: 1
@@ -87,10 +87,7 @@ services:
       start_period: 90s
   # MediaCMS Backend (Django)
   mediacms:
-    build:
-      context: .
-      dockerfile: Dockerfile.mediacms-ultra
-    platform: linux/amd64  # Force x86_64 platform for compatibility
+    image: mediacms/mediacms:latest
     container_name: v0_trailer_mediacms
     restart: unless-stopped
     ports:

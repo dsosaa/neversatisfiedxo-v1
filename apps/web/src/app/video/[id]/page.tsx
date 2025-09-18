@@ -113,7 +113,7 @@ export default function VideoDetailPage() {
     <div className="min-h-screen bg-background">
       {/* Header matching main site design */}
       <header className="border-b border-border backdrop-blur-sm bg-background/80 sticky top-0 z-40">
-        <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20 py-4">
+        <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <Button variant="ghost" size="sm" onClick={() => router.back()}>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -347,17 +347,18 @@ export default function VideoDetailPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="fixed bottom-0 left-0 right-0 border-t border-zinc-800/40 z-50 bg-zinc-950/95 backdrop-blur-md"
+            className="fixed bottom-0 left-0 right-0 border-t border-zinc-800/40 z-50 bg-zinc-950/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
           >
             <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20 py-3">
               <div className="flex items-center gap-4">
                 {/* Mini Player */}
                 <div className="w-32 aspect-video rounded-lg overflow-hidden bg-black flex-shrink-0">
                   <iframe
-                    src={`https://iframe.videodelivery.net/${trailer.cf_video_uid}?autoplay=true&muted=true`}
+                    src={`https://iframe.videodelivery.net/${trailer.cf_video_uid}?autoplay=false&muted=true&preload=metadata&playsinline=true&poster=${encodeURIComponent(`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=0.005s&width=800&height=450&quality=75&fit=crop&format=webp`)}`}
                     className="w-full h-full rounded-lg border-0"
                     allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
                     allowFullScreen
+                    loading="lazy"
                     title={`Mini player for ${trailer.title}`}
                   />
                 </div>

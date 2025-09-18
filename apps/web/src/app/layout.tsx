@@ -26,7 +26,10 @@ export const metadata: Metadata = {
   title: "neversatisfiedxo | Video Vault",
   description: "Exclusive premium content gallery by neversatisfiedxo",
   keywords: ["premium", "gallery", "exclusive", "content"],
-  robots: "noindex, nofollow",
+  robots: process.env.NEXT_PUBLIC_ALLOW_INDEXING === 'true' ? {
+    index: true,
+    follow: true
+  } : "noindex, nofollow",
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' }
@@ -44,6 +47,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -59,6 +63,12 @@ export default function RootLayout({
         <link rel="preconnect" href="https://iframe.videodelivery.net" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://videodelivery.net" />
         <link rel="dns-prefetch" href="https://iframe.videodelivery.net" />
+        {process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE ? (
+          <>
+            <link rel="preconnect" href={`https://customer-${process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}.cloudflarestream.com`} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={`https://customer-${process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}.cloudflarestream.com`} />
+          </>
+        ) : null}
         
         {/* Preload critical resources */}
         <link rel="preload" href="/icon.svg" as="image" type="image/svg+xml" />

@@ -1,13 +1,15 @@
-'use client'
+"use client"
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { TrailerCard, TrailerCardSkeleton, TrailerGrid, TrailerList, TrailerListItem } from '@/components/trailer-card'
-import { VirtualizedTrailerDisplay } from '@/components/virtualized-trailer-display'
 import { m, motionPresets } from '@/lib/motion'
+// Removed unused preloader hook
 import type { Trailer } from '@/lib/types'
+import { generateOptimizedThumbnailUrl } from '@/lib/image-utils'
 
 // Import QuickPreview directly for better mobile compatibility
-import { QuickPreview } from '@/components/quick-preview'
+import dynamic from 'next/dynamic'
+const QuickPreview = dynamic(() => import('@/components/quick-preview').then(m => m.QuickPreview), { ssr: false })
 
 // Loading skeleton for QuickPreview - mimics the modal structure (not used anymore)
 // function QuickPreviewSkeleton({ 
@@ -67,6 +69,8 @@ export function TrailerDisplay({
 }: TrailerDisplayProps) {
   const [selectedTrailer, setSelectedTrailer] = useState<Trailer | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
+  
+  // Removed complex preloading logic
 
   const handlePreview = useCallback((trailer: Trailer) => {
     setSelectedTrailer(trailer)
@@ -77,6 +81,50 @@ export function TrailerDisplay({
     setPreviewOpen(false)
     setTimeout(() => setSelectedTrailer(null), 300)
   }, [])
+
+  // Background preload of upcoming thumbnails (beyond viewport)
+  useEffect(() => {
+    if (!trailers || trailers.length === 0) return
+
+    const CONCURRENCY = 6
+
+    // Preload ALL trailer thumbnails in the background
+    const urls = trailers
+      .filter(t => !!t.cf_video_uid)
+      .map(t => generateOptimizedThumbnailUrl(t.cf_video_uid, {
+        time: '0.005s',
+        width: 800,
+        height: 450,
+        quality: 75,
+        format: 'jpeg',
+        fit: 'crop'
+      }))
+
+    let cancelled = false
+    let index = 0
+    let active = 0
+
+    const startNext = () => {
+      if (cancelled) return
+      if (index >= urls.length) return
+      while (active < CONCURRENCY && index < urls.length) {
+        const src = urls[index++]
+        active++
+        const img = new Image()
+        // Hint to browser: low priority background fetch
+        try { (img as any).fetchPriority = 'low' } catch {}
+        img.decoding = 'async'
+        img.onload = img.onerror = () => {
+          active--
+          startNext()
+        }
+        img.src = src
+      }
+    }
+
+    startNext()
+    return () => { cancelled = true }
+  }, [trailers])
 
   if (isLoading) {
     return viewMode === 'grid' ? (
@@ -128,63 +176,46 @@ export function TrailerDisplay({
     )
   }
 
-  // Disable virtualization for better UX - 169 items is manageable for modern browsers
-  const useVirtualization = false // trailers.length > 200
-  
   return (
     <>
-      {useVirtualization ? (
-        // Virtualized display for large lists (>50 items)
-        <VirtualizedTrailerDisplay
-          trailers={trailers}
-          isLoading={isLoading}
-          viewMode={viewMode}
-          onPreview={handlePreview}
-          className="w-full"
-        />
+      {viewMode === 'grid' ? (
+        <TrailerGrid>
+          {trailers.map((trailer, index) => (
+            <m.div
+              key={trailer.id}
+              {...motionPresets.slideUp}
+              transition={{ 
+                duration: 0.3,
+                delay: index * 0.02 
+              }}
+            >
+              <TrailerCard
+                trailer={trailer}
+                highPriority={index < 24}
+                onPreview={handlePreview}
+              />
+            </m.div>
+          ))}
+        </TrailerGrid>
       ) : (
-        // Standard display for smaller lists (≤50 items)
-        <>
-          {viewMode === 'grid' ? (
-            <TrailerGrid>
-              {trailers.map((trailer, index) => (
-                <m.div
-                  key={trailer.id}
-                  {...motionPresets.slideUp}
-                  transition={{ 
-                    duration: 0.3,
-                    delay: index * 0.02 
-                  }}
-                >
-                  <TrailerCard
-                    trailer={trailer}
-                    highPriority={index < 4}
-                    onPreview={handlePreview}
-                  />
-                </m.div>
-              ))}
-            </TrailerGrid>
-          ) : (
-            <TrailerList>
-              {trailers.map((trailer, index) => (
-                <m.div
-                  key={trailer.id}
-                  {...motionPresets.slideLeft}
-                  transition={{ 
-                    duration: 0.3,
-                    delay: index * 0.02 
-                  }}
-                >
-                  <TrailerListItem
-                    trailer={trailer}
-                    highPriority={index < 2}
-                    onPreview={handlePreview}
-                  />
-                </m.div>
-              ))}
-            </TrailerList>
-          )}
-        </>
+        <TrailerList>
+          {trailers.map((trailer, index) => (
+            <m.div
+              key={trailer.id}
+              {...motionPresets.slideLeft}
+              transition={{ 
+                duration: 0.3,
+                delay: index * 0.02 
+              }}
+            >
+              <TrailerListItem
+                trailer={trailer}
+                highPriority={index < 24}
+                onPreview={handlePreview}
+              />
+            </m.div>
+          ))}
+        </TrailerList>
       )}
 
       {/* Quick Preview Dialog */}

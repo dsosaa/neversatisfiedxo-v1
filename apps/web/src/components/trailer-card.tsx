@@ -6,10 +6,12 @@ import Image from 'next/image'
 import { Play, Film, DollarSign, User, Eye, Clock } from '@/lib/icons'
 import { Card, CardContent } from '@/components/ui/card'
 import { m, conditionalMotion, motionPresets } from '@/lib/motion'
+// Removed unused hooks and components
 import type { TrailerCardProps } from '@/lib/types'
 import { formatPrice, parseLength, formatLength, parsePrice } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { useReducedMotion } from '@/hooks/use-reduced-motion'
+import { generateOptimizedThumbnailUrl } from '@/lib/image-utils'
 
 
 // Utility function to truncate text
@@ -70,6 +72,8 @@ const UnifiedBadge = ({ variant, children, icon, className }: { variant: 'primar
 export const TrailerCard = memo(function TrailerCard({ trailer, onPreview, highPriority = false }: TrailerCardProps) {
   const [showFullDescription, setShowFullDescription] = useState(false)
   const prefersReducedMotion = useReducedMotion()
+  
+  // Removed complex lazy loading and preloading logic
 
   // Debug logging to identify rendering issues
   // Trailer card rendering
@@ -120,25 +124,16 @@ export const TrailerCard = memo(function TrailerCard({ trailer, onPreview, highP
       tabIndex={0}
       aria-label={`Play trailer: ${trailer.title} by ${trailer.creators}. ${formattedPrice}, ${formattedLength}`}
     >
-      <Card className="h-full flex flex-col overflow-hidden border border-zinc-800/40 hover:border-zinc-600/60 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/30 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950 transition-all duration-300 rounded-2xl shadow-xl hover:shadow-2xl bg-gradient-to-br from-zinc-950/95 via-zinc-900/90 to-zinc-950/95 backdrop-blur-md hover:scale-[1.02] group-hover:shadow-sky-500/10">
-        <div className="relative aspect-[16/9] bg-black rounded-t-2xl overflow-hidden">
-          {/* Static thumbnail only (no iframe) */}
+      <Card 
+        className="h-full flex flex-col overflow-hidden border border-zinc-800/40 hover:border-zinc-600/60 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/30 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950 transition-all duration-300 rounded-2xl shadow-xl hover:shadow-2xl bg-gradient-to-br from-zinc-950/95 via-zinc-900/90 to-zinc-950/95 backdrop-blur-md hover:scale-[1.02] group-hover:shadow-sky-500/10"
+      >
+        <div className="relative aspect-[16/9] bg-black rounded-t-2xl overflow-hidden" style={{ contentVisibility: 'auto', containIntrinsicSize: '288px 162px' }}>
           {trailer.cf_video_uid ? (
-            <Image
-              src={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=0.005s&width=1280&height=720&quality=85&format=webp&sharpen=1`}
+            <CardThumbnail
+              uid={trailer.cf_video_uid}
               alt={`Thumbnail for ${trailer.title}`}
-              fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              priority={highPriority}
-              fetchPriority={highPriority ? 'high' : 'auto'}
-              loading={highPriority ? 'eager' : 'lazy'}
-              className="object-cover"
-              onError={(e) => {
-                console.error('❌ Image failed to load for video:', trailer.video_number, e)
-              }}
-              onLoad={() => {
-                // Image loaded successfully
-              }}
+              highPriority={highPriority}
             />
           ) : (
             <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center text-zinc-400">
@@ -258,38 +253,72 @@ export const TrailerCard = memo(function TrailerCard({ trailer, onPreview, highP
   )
 })
 
-// Skeleton loader for trailer cards
+// Enhanced skeleton loader for trailer cards with better animations
 export function TrailerCardSkeleton() {
   return (
     <Card className="overflow-hidden border border-zinc-800/50 rounded-2xl shadow-lg bg-zinc-950/95 backdrop-blur-sm">
-      <div className="relative aspect-[16/9] bg-muted rounded-t-2xl animate-pulse overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+      <div className="relative aspect-[16/9] bg-muted rounded-t-2xl overflow-hidden">
+        {/* Animated shimmer effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
         
-        {/* Skeleton badges */}
+        {/* Skeleton badges with staggered animation */}
         <div className="absolute top-3 left-3">
-          <div className="h-7 px-3 rounded-xl bg-zinc-700/50 animate-pulse w-16" />
+          <div className="h-7 px-3 rounded-xl bg-zinc-700/50 animate-pulse w-16 skeleton-delay-1" />
         </div>
         <div className="absolute top-3 right-3">
-          <div className="h-7 px-3 rounded-xl bg-zinc-700/50 animate-pulse w-14" />
+          <div className="h-7 px-3 rounded-xl bg-zinc-700/50 animate-pulse w-14 skeleton-delay-2" />
+        </div>
+        <div className="absolute bottom-3 left-3">
+          <div className="h-6 px-2 rounded-lg bg-zinc-700/50 animate-pulse w-12 skeleton-delay-3" />
         </div>
       </div>
       <CardContent className="p-5 space-y-3">
-        {/* Title skeleton */}
-        <div className="h-6 bg-muted rounded-md animate-pulse" />
+        {/* Title skeleton with varying width */}
+        <div className="h-6 bg-muted rounded-md animate-pulse w-4/5" style={{ animationDelay: '0.4s' }} />
         
-        {/* Description skeleton */}
+        {/* Description skeleton with realistic text patterns */}
         <div className="space-y-2">
-          <div className="h-4 bg-muted rounded-md animate-pulse" />
-          <div className="h-4 bg-muted rounded-md w-3/4 animate-pulse" />
-          <div className="h-4 bg-muted rounded-md w-1/2 animate-pulse" />
+          <div className="h-4 bg-muted rounded-md animate-pulse w-full" style={{ animationDelay: '0.5s' }} />
+          <div className="h-4 bg-muted rounded-md w-3/4 animate-pulse" style={{ animationDelay: '0.6s' }} />
+          <div className="h-4 bg-muted rounded-md w-1/2 animate-pulse" style={{ animationDelay: '0.7s' }} />
         </div>
         
         {/* Footer skeleton */}
         <div className="flex justify-between items-center pt-4 mt-auto border-t border-zinc-800/50">
-          <div className="h-7 px-3 rounded-xl bg-zinc-700/50 animate-pulse w-20" />
-          <div className="w-3 h-3 bg-muted rounded-full animate-pulse" />
+          <div className="h-7 px-3 rounded-xl bg-zinc-700/50 animate-pulse w-20" style={{ animationDelay: '0.8s' }} />
+          <div className="w-3 h-3 bg-muted rounded-full animate-pulse" style={{ animationDelay: '0.9s' }} />
         </div>
       </CardContent>
+    </Card>
+  )
+}
+
+// Compact skeleton for list view
+export function TrailerListItemSkeleton() {
+  return (
+    <Card className="overflow-hidden border border-zinc-800/50 rounded-2xl shadow-lg bg-zinc-950/95 backdrop-blur-sm">
+      <div className="flex gap-6 p-6">
+        {/* Image skeleton */}
+        <div className="relative w-56 aspect-[16/9] bg-muted rounded-xl overflow-hidden flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+          <div className="absolute bottom-2 left-2">
+            <div className="h-6 px-2 rounded-lg bg-zinc-700/50 animate-pulse w-12" />
+          </div>
+        </div>
+        
+        {/* Content skeleton */}
+        <div className="flex-1 space-y-3">
+          <div className="h-6 bg-muted rounded-md animate-pulse w-3/4" />
+          <div className="space-y-2">
+            <div className="h-4 bg-muted rounded-md animate-pulse w-full" />
+            <div className="h-4 bg-muted rounded-md w-2/3 animate-pulse" />
+          </div>
+          <div className="flex justify-between items-center pt-2">
+            <div className="h-6 px-3 rounded-xl bg-zinc-700/50 animate-pulse w-16" />
+            <div className="w-3 h-3 bg-muted rounded-full animate-pulse" />
+          </div>
+        </div>
+      </div>
     </Card>
   )
 }
@@ -310,6 +339,8 @@ export function TrailerList({ children, className }: {
 export const TrailerListItem = memo(function TrailerListItem({ trailer, onPreview, highPriority = false }: TrailerCardProps) {
   const [showFullDescription, setShowFullDescription] = useState(false)
   const prefersReducedMotion = useReducedMotion()
+  
+  // Removed complex lazy loading logic
 
   // Memoize expensive calculations
   const price = useMemo(() => parsePrice(trailer.price), [trailer.price])
@@ -360,19 +391,17 @@ export const TrailerListItem = memo(function TrailerListItem({ trailer, onPrevie
       tabIndex={0}
       aria-label={`Play trailer: ${trailer.title} by ${trailer.creators}. ${formattedPrice}, ${formattedLength}`}
     >
-      <Card className="overflow-hidden border border-zinc-800/40 hover:border-zinc-600/60 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/30 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950 transition-all duration-300 rounded-2xl shadow-xl hover:shadow-2xl bg-gradient-to-br from-zinc-950/95 via-zinc-900/90 to-zinc-950/95 backdrop-blur-md group-hover:shadow-sky-500/10">
+      <Card 
+        className="overflow-hidden border border-zinc-800/40 hover:border-zinc-600/60 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/30 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950 transition-all duration-300 rounded-2xl shadow-xl hover:shadow-2xl bg-gradient-to-br from-zinc-950/95 via-zinc-900/90 to-zinc-950/95 backdrop-blur-md group-hover:shadow-sky-500/10"
+      >
         <div className="flex gap-6 p-6">
-          {/* Lazy loading video player - replaced by static image for gallery */}
-          <div className="relative w-56 aspect-[16/9] bg-black rounded-xl overflow-hidden flex-shrink-0">
-            <Image
-              src={`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=0.005s&width=800&height=450&quality=90&format=webp`}
+          {/* Progressive image loading with lazy loading */}
+          <div className="relative w-56 aspect-[16/9] bg-black rounded-xl overflow-hidden flex-shrink-0" style={{ contentVisibility: 'auto', containIntrinsicSize: '224px 126px' }}>
+            <CardThumbnail
+              uid={trailer.cf_video_uid}
               alt={`Thumbnail for ${trailer.title}`}
-              fill
               sizes="224px"
-              priority={highPriority}
-              fetchPriority={highPriority ? 'high' : 'auto'}
-              loading={highPriority ? 'eager' : 'lazy'}
-              className="object-cover"
+              highPriority={highPriority}
             />
 
             {/* Upload status indicator - only show if not complete - HIDDEN */}
@@ -477,6 +506,74 @@ export const TrailerListItem = memo(function TrailerListItem({ trailer, onPrevie
     </m.div>
   )
 })
+
+function CardThumbnail({
+  uid,
+  alt,
+  sizes,
+  highPriority = false
+}: {
+  uid: string
+  alt: string
+  sizes: string
+  highPriority?: boolean
+}) {
+  const [fallbackIndex, setFallbackIndex] = useState(0)
+  const customerCode = process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE
+
+  const candidates = useMemo(() => {
+    const times = ['0.005s', '0.015s', '0.03s']
+    // Prefer JPEG first for faster decode on many devices, then WebP
+    const fmts: Array<'jpeg' | 'webp'> = ['jpeg', 'webp']
+    const urls: string[] = []
+    for (const fmt of fmts) {
+      for (const t of times) {
+        urls.push(
+          generateOptimizedThumbnailUrl(uid, {
+            time: t,
+            width: 800,
+            height: 450,
+            quality: 75,
+            format: fmt as 'webp' | 'jpeg',
+            fit: 'crop'
+          })
+        )
+      }
+    }
+    if (customerCode) {
+      for (const fmt of fmts) {
+        for (const t of times) {
+          const params = new URLSearchParams({
+            time: t,
+            width: String(800),
+            height: String(450),
+            quality: String(75),
+            format: fmt,
+            fit: 'crop'
+          })
+          urls.push(`https://customer-${customerCode}.cloudflarestream.com/${uid}/thumbnails/thumbnail.jpg?${params.toString()}`)
+        }
+      }
+    }
+    return urls
+  }, [uid, customerCode])
+
+  const src = candidates[Math.min(fallbackIndex, candidates.length - 1)]
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      priority={highPriority}
+      sizes={sizes}
+      // Remove blur placeholder for a uniform look; use shimmer background
+      className="object-cover"
+      referrerPolicy="no-referrer"
+      onError={() => setFallbackIndex((i) => i + 1)}
+    />
+  )
+}
 
 // Grid container for trailer cards
 export function TrailerGrid({ children, className }: { 

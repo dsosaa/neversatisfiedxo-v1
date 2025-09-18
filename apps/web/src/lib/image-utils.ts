@@ -30,12 +30,12 @@ export function generateOptimizedThumbnailUrl(
 ): string {
   const {
     time = '0.005s',
-    quality = 95,
+    quality = 75, // Reduced from 95 for faster loading
     format = 'webp',
     fit = 'cover',
-    width = 1920,
-    height = 1080,
-    dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1
+    width = 1280, // Reduced from 1920 for faster loading
+    height = 720, // Reduced from 1080 for faster loading
+    dpr = 1 // Disabled DPR for faster loading
   } = options;
 
   const params = new URLSearchParams({
@@ -79,9 +79,9 @@ export function generateFallbackUrls(
     ...options,
     time: timestamps[2],
     format: 'jpeg',
-    width: 800,
-    height: 450,
-    quality: 85
+    width: 640, // Reduced from 800 for faster loading
+    height: 360, // Reduced from 450 for faster loading
+    quality: 70 // Reduced from 85 for faster loading
   }));
 
   return urls;
@@ -113,9 +113,9 @@ export async function loadProgressiveImage(
   lowQualityOptions: ThumbnailOptions = {}
 ): Promise<{ lowQuality: string; highQuality: string }> {
   const lowQuality = generateOptimizedThumbnailUrl(videoId, {
-    width: 320,
-    height: 180,
-    quality: 50,
+    width: 240, // Reduced from 320 for faster loading
+    height: 135, // Reduced from 180 for faster loading
+    quality: 40, // Reduced from 50 for faster loading
     format: 'jpeg',
     ...lowQualityOptions
   });

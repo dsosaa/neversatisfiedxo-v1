@@ -24,6 +24,7 @@ export interface TrailerFilters {
   status?: string
   year?: number
   date_range?: 'all' | 'today' | 'week' | 'month' | 'year'
+  ordering?: string
 }
 
 export interface ApiResponse<T> {

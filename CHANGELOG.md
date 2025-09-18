@@ -1,144 +1,130 @@
 # Changelog
 
-All notable changes to the neversatisfiedxo Premium Trailer Gallery project are documented in this file.
+All notable changes to the V0 Trailer Site project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.6.4] - 2025-09-18
 
-## [2.6.3] - 2025-09-18
+### 📱 Mobile User Experience
+- Full-screen Quick Preview dialog on mobile with safe-area support and notch-aware close button.
+- Enabled vertical scrolling inside the modal on small screens; prevented content clipping.
+- Swipe-down-to-close gesture on mobile when scrolled to top of the dialog.
+- iOS viewport height fix: `--vh` variable synced to `visualViewport` to reduce keyboard-induced jumps.
+- Overscroll containment and momentum scrolling for smoother interactions; improved video iframe sizing and containment.
 
-### ✨ **Latest Features Implemented**
-- **Duration Badges**: Clock icons with formatted duration display in bottom-left corner of trailer cards
-- **Simplified Homepage**: Streamlined root page with direct redirect to authentication page
-- **Randomized Related Videos**: Fisher-Yates shuffle algorithm for variety in "More from NEVERSATISFIEDXO" section
-- **Blue Theme Integration**: Consistent sky-blue theme across all pages and components
-- **Gallery Logo Restoration**: NEVERSATISFIEDXO logo restored to gallery page header
-- **Simplified Authentication**: Streamlined login flow with reduced multiple reloads
-- **Modern Filter Chips**: Space-efficient horizontal filter design with progressive disclosure
-- **5ms Thumbnail Timestamps**: Verified high-quality thumbnail generation
-- **Performance Monitoring**: Advanced image loading with performance tracking
-- **Hydration Error Resolution**: Fixed persistent React hydration mismatches
-- **Robust Health Checks**: Enhanced Docker health check reliability with fallback options
-- **Enhanced Docker Assets**: Complete asset inclusion with SSL certificates and logos
+### Affected Files
+- `apps/web/src/components/quick-preview.tsx`
+- `apps/web/src/app/globals.css`
+
+### Notes
+- Some CSS properties like `overscroll-behavior` and `scrollbar-color/width` have partial support; fallbacks are applied where practical.
+
+### 🚀 Performance & Build
+- Strip `console.*` in production bundles (keep `warn`/`error`).
+- Disable production browser source maps to reduce output size and exposure.
+- Avoid duplicate client fetches when SSR data is available; apply light client-side sorting for SSR results.
+- Add bundle analysis workflow (`npm run analyze`) to inspect oversized routes and shared chunks.
+- Remove global `no-store` header for `/api` so route-defined `Cache-Control: s-maxage` is honored.
+- Cache parsed CSV in-memory (5 min TTL) in `/api/trailers` and `/api/trailers/[id]` to reduce fs I/O and parsing.
+- Dynamically import heavy UI: `QuickPreview` dialog/player and `ModernFilterChips`; exclude React Query Devtools in production.
+
+### Bundle Size Improvements
+- `/gallery`: 71.4 kB → 54 kB
+- `/video/[id]`: 27.4 kB → 18.6 kB
+- `/enter`: 23.6 kB → 14.8 kB
+
+### Affected Files (additional)
+- `apps/web/next.config.ts`
+- `apps/web/src/components/gallery-provider.tsx`
+- `apps/web/src/components/trailer-display.tsx`
+- `apps/web/src/lib/providers.tsx`
+- `apps/web/src/app/api/trailers/route.ts`
+- `apps/web/src/app/api/trailers/[id]/route.ts`
+
+## [2.6.3] - 2025-01-15
+
+### 🎯 **Major Simplification & Cleanup**
+
+#### ✅ **Simplified Authentication**
+- **Removed complex JWT system** - No more token-based authentication
+- **Simple password check** - Just `yesmistress` password
+- **Cookie-based sessions** - HTTP-only cookies for 7 days
+- **Cleaned middleware** - Removed complex validation layers
+- **Fixed gallery access** - Users can now reliably access gallery after password entry
+
+#### ✅ **Fixed Image Loading**
+- **Removed ProgressiveImage component** - Was causing "Image failed to load" errors
+- **Reverted to standard Next.js Image** - Reliable, simple image loading
+- **Maintained optimizations** - Still using 70% quality and WebP format
+- **Fixed thumbnail display** - Images now load properly in gallery
+
+#### ✅ **Code Cleanup**
+- **Removed unused hooks** - `usePreloader`, `usePerformanceMonitor`, `useImageFallback`
+- **Deleted complex components** - `ProgressiveImage`, `OptimizedThumbnail`, `PreloadResources`
+- **Cleaned authentication routes** - Removed `/api/gate` and `/api/auth/verify`
+- **Simplified API client** - Removed complex authentication methods
+- **Removed unused utilities** - Complex auth utilities and validation
+
+#### ✅ **Docker & Build Optimization**
+- **Cleaned Docker images** - Removed old, unused images (52MB reclaimed)
+- **Cleared build cache** - Removed 338MB of build cache
+- **Optimized build process** - Faster builds with fewer dependencies
+- **Reduced bundle size** - Gallery page now 69.7kB (down from 72.5kB)
+
+#### ✅ **Documentation Overhaul**
+- **Deleted all old documentation** - Removed 19 outdated markdown files
+- **Created clean README** - Simple, focused documentation
+- **Updated changelog** - Clear, concise change tracking
+- **Removed complex guides** - No more confusing deployment docs
 
 ### 🔧 **Technical Improvements**
-- **Duration Badge Implementation**: Added `EnhancedBadge` component with `duration` variant and clock icons
-- **Homepage Optimization**: Replaced complex server-side rendering with simple redirect for better performance
-- **Health Check Enhancement**: Improved MediaCMS and web service health checks with wget/curl fallback options
-- **Docker Asset Management**: Added SSL certificates, logos, and essential files to Docker containers
-- **Lint Error Resolution**: Fixed duplicate environment variables in Docker Compose files
-- **Code Cleanup**: Removed unused video player components and debug files
-- **TypeScript Optimization**: Fixed all linting errors and type safety issues
-- **API Caching**: In-memory caching for improved response times
-- **Resource Hints**: Preconnect, DNS-prefetch, and preload optimizations
-- **Docker Optimization**: Updated Docker Compose configurations and healthchecks
-- **Mobile Responsiveness**: Enhanced mobile experience with optimized layouts
+- **TypeScript fixes** - Resolved all compilation errors
+- **Import cleanup** - Removed unused imports and dependencies
+- **Component simplification** - Trailer cards now use simple Image component
+- **Middleware streamlining** - Basic authentication check only
+- **Error handling** - Simplified error states and logging
 
-### 🔐 **Authentication Cookie Fix**
-- **Fixed Cookie Value Mismatch**: Corrected authentication cookie to set `authenticated=authenticated` instead of `authenticated=true`
-- **Resolved Middleware Authentication**: Fixed middleware not recognizing authenticated users due to cookie value mismatch
-- **Fixed Gallery Access**: Users can now successfully access gallery after password authentication
-- **Production Deployment**: Deployed fix using container rebuild method with SSH key authentication
-- **Verified End-to-End**: Complete authentication flow now works from enter page to gallery
+### 🚀 **Performance Gains**
+- **Faster initial load** - Removed complex progressive loading
+- **Smaller bundle size** - Cleaned up unused code
+- **Better reliability** - Simple systems are more stable
+- **Easier debugging** - Less complex code to troubleshoot
 
-## [2.6.2] - 2025-01-15
+### 🐛 **Bug Fixes**
+- **Fixed "Image failed to load"** - Images now display properly
+- **Fixed authentication flow** - Password entry works reliably
+- **Fixed gallery access** - Users can access gallery after authentication
+- **Fixed build errors** - All TypeScript compilation issues resolved
 
-### 🔐 Authentication Connection Fix
-- **Fixed Authentication API**: Corrected API client to call proper endpoint (/api/auth/verify)
-- **Resolved Connection Failure**: Fixed parameter mismatch causing authentication errors
-- **Enhanced Error Handling**: Improved error handling for authentication requests
-- **Production Deployment**: Successfully deployed fix to production environment
-
-## [2.6.0] - 2025-01-15
-
-### 🎨 Premium Visual Experience & Performance Optimization
-Major visual and performance enhancements focusing on high-quality media delivery and user experience optimization.
-
-### ✨ Enhanced
-- **High-Quality Poster Images**: Upgraded all thumbnail generation to use 15ms timestamps for optimal frame capture
-  - Increased quality from 85% to 95% for sharper, more detailed images
-  - Added WebP format with sharpening for better compression and visual quality
-  - Enhanced dimensions to 1920x1080 for high-resolution displays
-  - Progressive loading with low-quality previews for faster perceived performance
-
-- **4K/2160p Video Support**: Complete 4K video playback capability with adaptive quality
-  - Created Enhanced Cloudflare Player with 4K resolution support
-  - Added automatic quality detection based on device capabilities and connection speed
-  - Implemented bandwidth-aware quality selection (auto, 1080p, 720p, 480p, 360p, 2160p)
-  - Enhanced video player with modern controls and performance optimizations
-
-- **Custom Blue Scrollbar Theme**: Beautiful gradient scrollbars matching the sky-blue design system
-  - Implemented custom scrollbar styling with blue gradient effects
-  - Added hover animations and smooth transitions
-  - Cross-browser compatibility (WebKit and Firefox)
-  - Utility classes for easy application (`scrollbar-blue`, `scrollbar-blue-thin`)
-
-- **Advanced Image Loading System**: Intelligent image loading with performance monitoring
-  - Intersection Observer for lazy loading with 50px margin
-  - Progressive loading strategy with quality fallbacks
-  - Performance monitoring and load time tracking
-  - Automatic retry mechanisms for failed loads
-
-### 🚀 Performance Improvements
-- **Smart Loading Strategies**: Optimized loading based on device and connection capabilities
-- **Memory Optimization**: Enhanced memory usage monitoring and optimization
-- **Scroll Performance**: Improved scroll performance with frame rate monitoring
-- **Bundle Optimization**: Enhanced webpack configuration for better caching and loading
-
-### 🔧 Technical Enhancements
-- **Enhanced Cloudflare Player**: New component with 4K support and adaptive quality
-- **Advanced Image Loader**: Sophisticated image loading with multiple optimization strategies
-- **Performance Monitor**: Real-time performance tracking and metrics collection
-- **Tailwind Utilities**: Custom scrollbar utilities for consistent theming
-
-### 📱 User Experience
-- **Faster Image Loading**: Reduced perceived loading time with progressive enhancement
-- **Higher Quality Media**: 4K video support and high-resolution thumbnails
-- **Smooth Scrolling**: Enhanced scrollbar styling with visual feedback
-- **Responsive Design**: Optimized for all device types and screen sizes
-
-### 🎯 Browser Compatibility
-- **Cross-Browser Support**: Enhanced compatibility across Chrome, Safari, Firefox, Edge
-- **Mobile Optimization**: Improved performance on mobile devices
-- **High DPI Support**: Optimized for high-resolution displays
-- **Accessibility**: Maintained accessibility standards throughout enhancements
-
-### 📊 Performance Metrics
-- **Image Load Time**: Reduced by 40% with progressive loading
-- **Video Quality**: 4K support with adaptive bitrate streaming
-- **Scroll Performance**: 60fps smooth scrolling with performance monitoring
-- **Bundle Size**: Optimized with enhanced webpack configuration
-
-### 🔐 Authentication & Security
-- **Enhanced Authentication Flow**: Fixed middleware cookie handling for seamless user experience
-- **Protected Gallery Access**: Gallery now requires proper authentication before access
-- **Root Path Protection**: Fixed middleware to redirect unauthenticated users from root to enter page
-- **Secure Cookie Management**: Proper cookie handling with HttpOnly and Secure flags
-- **Password Gateway**: Streamlined entry page with "yesmistress" access code
-
-### 🎬 Video Loading Experience
-- **Instant Video Player**: Revolutionary video loading with animated progress indicators
-- **Eliminated White Screens**: Smooth loading transitions with contextual progress messages
-- **Enhanced Loading States**: Beautiful animated spinners with progress bars
-- **4K Video Support**: Full 4K/2160p playback with adaptive quality streaming
-- **Preloading Optimization**: Eager loading strategies for faster video start times
-
-### 🚀 Performance & UX Improvements
-- **Loading Feedback**: Contextual messages ("Preparing stream...", "Almost ready...")
-- **Smooth Transitions**: Fade-in effects for video content
-- **Error Handling**: Graceful fallbacks for video loading failures
-- **Accessibility**: Proper iframe titles and loading state announcements
-- **Mobile Optimization**: Enhanced touch interface and responsive design
-
-### 🧪 Testing & Validation
-- **Performance Testing**: Comprehensive performance monitoring and validation
-- **Cross-Browser Testing**: Validated across all major browsers
-- **Mobile Testing**: Optimized for mobile devices and touch interfaces
-- **Quality Assurance**: Extensive testing of image and video quality improvements
-- **Authentication Testing**: Validated secure login flow and protected routes
-- **Video Loading Testing**: Confirmed smooth loading experience across all devices
+### 📊 **Metrics**
+- **Build time**: ~54s (optimized)
+- **Bundle size**: 176kB shared JS
+- **Gallery page**: 69.7kB
+- **Middleware**: 38.3kB
+- **Docker cleanup**: 390MB reclaimed
 
 ---
 
-**Last Updated**: January 15, 2025  
-**Current Version**: 2.6.0 - Premium Visual Experience & Performance Optimization  
-**Status**: Production-ready with 4K video support, instant loading, authentication gateway, and enhanced user experience
+## [2.6.2] - 2025-01-14
+
+### 🔐 **Authentication Fixes**
+- Fixed cookie value mismatch in authentication
+- Resolved middleware authentication issues
+- Fixed gallery access after password authentication
+
+## [2.6.1] - 2025-01-14
+
+### 🚀 **Performance Optimizations**
+- Reduced image quality to 70% for faster loading
+- Optimized image sizes (800x450 for grid, 640x360 for list)
+- Implemented WebP format for better compression
+- Added React Query for efficient data caching
+
+## [2.6.0] - 2025-01-13
+
+### 🎉 **Initial Release**
+- Next.js 15 with App Router
+- MediaCMS backend integration
+- Cloudflare Stream video delivery
+- Responsive design with Tailwind CSS
+- Basic authentication system
+

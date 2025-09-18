@@ -9,7 +9,8 @@ import type { Trailer, TrailerFilters } from '@/lib/types'
 import { parsePrice } from '@/lib/api'
 import { useDebounce } from '@/lib/use-debounce'
 
-import { ModernFilterChips } from '@/components/modern-filter-chips'
+import dynamic from 'next/dynamic'
+const ModernFilterChips = dynamic(() => import('@/components/modern-filter-chips').then(m => m.ModernFilterChips), { ssr: false })
 
 // Lazy load command palette (heavy component with search functionality)
 // const CommandPalette = lazy(() => import('@/components/command-palette').then(module => ({
@@ -44,12 +45,31 @@ export function GalleryProvider({ initialData }: GalleryProviderProps) {
 
   // Fetch data - only call hooks when needed
   const searchEnabled = searchQuery.trim().length > 2
-  const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchTrailers(debouncedSearchQuery, searchEnabled)
+  // Compute server ordering string from UI sort selection
+  const ordering = useMemo(() => {
+    switch (sortBy) {
+      case 'newest':
+        return '-created_at'
+      case 'oldest':
+        return 'created_at'
+      case 'price_low':
+        return 'price'
+      case 'price_high':
+        return '-price'
+      default:
+        return '-created_at'
+    }
+  }, [sortBy])
+
+  const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchTrailers(debouncedSearchQuery, searchEnabled, ordering)
   
-  // Only fetch trailers if we don't have initial data or if filters are applied
+  // Only fetch trailers if SSR data is missing, or user applies filters/search
   const hasFilters = Object.keys(filters).length > 0
-  const shouldFetchTrailers = !initialData || hasFilters
-  const { data: trailersData, isLoading: trailersLoading, error: trailersError } = useTrailers(filters, { enabled: shouldFetchTrailers })
+  // If SSR sent empty data, trigger client fetch to recover
+  const ssrEmpty = !initialData || (initialData.results?.length ?? 0) === 0
+  const shouldFetchTrailers = ssrEmpty || hasFilters || searchEnabled
+  const { data: trailersData, isLoading: trailersLoading, error: trailersError } =
+    useTrailers({ ...filters, ordering }, { enabled: shouldFetchTrailers })
 
   // Use search data if searching, otherwise use filtered trailers, fallback to initial data
   const finalData = searchEnabled ? searchData : (trailersData || initialData)
@@ -58,28 +78,24 @@ export function GalleryProvider({ initialData }: GalleryProviderProps) {
 
   // Note: Latest video number is now calculated server-side
 
-  // Sort trailers
+  // Client-side sorting only when we're using SSR data with no filters/search
   const sortedTrailers = useMemo(() => {
-    if (!finalData?.results) return []
-
-    const trailers = [...finalData.results]
-
-    // Apply sorting
-    return trailers.sort((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return (b.video_number || 0) - (a.video_number || 0)
-        case 'oldest':
-          return new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime()
-        case 'price_low':
-          return parsePrice(a.price) - parsePrice(b.price)
-        case 'price_high':
-          return parsePrice(b.price) - parsePrice(a.price)
-        default:
-          return 0
-      }
-    })
-  }, [finalData?.results, sortBy])
+    const list = finalData?.results ?? []
+    if (searchEnabled || hasFilters || shouldFetchTrailers) return list
+    const copy = [...list]
+    switch (sortBy) {
+      case 'newest':
+        return copy.sort((a, b) => (b.video_number ?? 0) - (a.video_number ?? 0))
+      case 'oldest':
+        return copy.sort((a, b) => (a.video_number ?? 0) - (b.video_number ?? 0))
+      case 'price_low':
+        return copy.sort((a, b) => parsePrice(a.price) - parsePrice(b.price))
+      case 'price_high':
+        return copy.sort((a, b) => parsePrice(b.price) - parsePrice(a.price))
+      default:
+        return list
+    }
+  }, [finalData?.results, sortBy, searchEnabled, hasFilters, shouldFetchTrailers])
 
   const handleFilterApply = useCallback((newFilters: FilterOptions) => {
     setActiveFilters(newFilters)

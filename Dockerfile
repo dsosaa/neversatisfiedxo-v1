@@ -11,29 +11,7 @@
 # - Duration badges with clock icons on trailer cards
 
 FROM node:20-alpine AS base
-
-# Install system dependencies and security updates
-FROM base AS deps
-RUN apk add --no-cache \
-    libc6-compat \
-    dumb-init \
-    openssh-client \
-    && apk upgrade --no-cache
-
-# Set working directory in web app context
-WORKDIR /app/web
-
-# Copy package files for dependency installation (correct path)
-COPY apps/web/package*.json ./
-
-# Install production dependencies with cache mounts for faster builds
-RUN --mount=type=cache,target=/root/.npm \
-    --mount=type=cache,target=/root/.cache \
-  if [ -f package-lock.json ]; then \
-    npm ci --omit=dev --no-audit --no-fund; \
-  else \
-    echo "Lockfile not found." && exit 1; \
-  fi
+ 
 
 # Build stage with all dependencies
 FROM base AS builder
@@ -53,9 +31,6 @@ RUN --mount=type=cache,target=/root/.npm \
 # Copy web application source code
 COPY apps/web/ ./
 
-# Copy data directory to root for access
-COPY data/ /app/data/
-
 # Set build environment variables
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
@@ -74,7 +49,7 @@ ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
 RUN --mount=type=cache,target=/app/web/.next/cache \
     --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=/tmp/tsbuildinfo \
-    npm run build
+    npm run build:production
 
 # Production image optimized for runtime
 FROM base AS runner
@@ -87,7 +62,7 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Install dumb-init and networking tools for health checks
-RUN apk add --no-cache dumb-init curl wget
+RUN apk add --no-cache dumb-init curl
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
@@ -97,9 +72,6 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder --chown=nextjs:nodejs /app/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/web/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/web/public ./public
-
-# Copy data directory for API access
-COPY --from=builder --chown=nextjs:nodejs /app/data ./data
 
 # Copy healthcheck script
 COPY --chown=nextjs:nodejs healthcheck.js ./

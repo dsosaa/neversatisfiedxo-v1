@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import * as React from 'react'
+import { useRouter } from 'next/navigation'
 import { m } from '@/lib/motion'
 import { Loader2 } from 'lucide-react'
 import Image from 'next/image'
@@ -12,6 +13,8 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 export default function EnterPage() {
+  const router = useRouter()
+  
   // Set page title
   React.useEffect(() => {
     document.title = 'enter...'
@@ -43,17 +46,14 @@ export default function EnterPage() {
       const data = await response.json()
 
       if (data.success) {
-        toast.success('Access granted! Welcome to the gallery')
-        // Authentication successful, redirecting...
-        
-        // Immediate redirect
-        window.location.href = '/gallery'
+        // Authentication successful, redirecting immediately
+        router.replace('/gallery')
       } else {
         toast.error('Invalid access code')
         setPassword('')
       }
-    } catch {
-      // Authentication error handled by toast
+    } catch (error) {
+      console.error('Authentication error:', error)
       toast.error('Connection failed, please try again')
       setPassword('')
     } finally {

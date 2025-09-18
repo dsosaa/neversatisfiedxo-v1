@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { m, AnimatePresence } from '@/lib/motion'
 import { X, ExternalLink, DollarSign, User, Film } from '@/lib/icons'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -49,6 +49,12 @@ export function QuickPreview({ trailer, open, onOpenChange }: QuickPreviewProps)
   const [isPlayerReady, setIsPlayerReady] = useState(false)
   const prefersReducedMotion = useReducedMotion()
   const focusTrapRef = useFocusTrap<HTMLDivElement>(open)
+  const contentRef = useRef<HTMLDivElement | null>(null)
+
+  // Swipe-to-close state (mobile)
+  const [touchStartY, setTouchStartY] = useState<number | null>(null)
+  const [swipeOffset, setSwipeOffset] = useState(0)
+  const [isSwiping, setIsSwiping] = useState(false)
   
   // Video loading state
   // const [_isVideoLoading, setIsVideoLoading] = useState(true) // Not used anymore
@@ -78,6 +84,61 @@ export function QuickPreview({ trailer, open, onOpenChange }: QuickPreviewProps)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [open, onOpenChange])
 
+  // Mobile 100vh fix: keep CSS var --vh in sync with visual viewport to reduce reflows
+  useEffect(() => {
+    if (!open) return
+    const setVh = () => {
+      const height = (window.visualViewport?.height ?? window.innerHeight)
+      const vh = height * 0.01
+      document.documentElement.style.setProperty('--vh', `${vh}px`)
+    }
+    setVh()
+    window.addEventListener('resize', setVh)
+    window.visualViewport?.addEventListener('resize', setVh)
+    window.visualViewport?.addEventListener('scroll', setVh)
+    return () => {
+      window.removeEventListener('resize', setVh)
+      window.visualViewport?.removeEventListener('resize', setVh)
+      window.visualViewport?.removeEventListener('scroll', setVh)
+    }
+  }, [open])
+
+  const canUseSwipe = () => typeof window !== 'undefined' && (window.innerWidth <= 768 || navigator.maxTouchPoints > 0)
+
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!canUseSwipe()) return
+    if (contentRef.current && contentRef.current.scrollTop > 0) return
+    const y = e.touches[0]?.clientY ?? 0
+    setTouchStartY(y)
+    setIsSwiping(true)
+    setSwipeOffset(0)
+  }, [])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isSwiping || touchStartY == null) return
+    if (contentRef.current && contentRef.current.scrollTop > 0) return
+    const currentY = e.touches[0]?.clientY ?? 0
+    const delta = currentY - touchStartY
+    if (delta > 0) {
+      // Dampen movement for better feel
+      setSwipeOffset(delta * 0.6)
+    }
+  }, [isSwiping, touchStartY])
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isSwiping) return
+    const shouldClose = swipeOffset > 80
+    setIsSwiping(false)
+    setTouchStartY(null)
+    if (shouldClose) {
+      onOpenChange(false)
+      setSwipeOffset(0)
+    } else {
+      // Reset with a small spring-like feel (handled by CSS transition on container)
+      setSwipeOffset(0)
+    }
+  }, [isSwiping, swipeOffset, onOpenChange])
+
   if (!trailer) return null
 
   const price = parsePrice(trailer.price)
@@ -86,8 +147,11 @@ export function QuickPreview({ trailer, open, onOpenChange }: QuickPreviewProps)
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        ref={focusTrapRef}
-        className="max-w-4xl w-full h-auto max-h-[90vh] overflow-hidden rounded-2xl p-0"
+        ref={(node) => { (focusTrapRef as any).current = node; contentRef.current = node }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="left-0 top-0 translate-x-0 translate-y-0 h-[100svh] mobile-dialog-vh w-[100vw] max-w-none rounded-none p-0 overflow-y-auto overscroll-contain sm:left-1/2 sm:top-1/2 sm:translate-x-[-50%] sm:translate-y-[-50%] sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-4xl sm:rounded-2xl"
         aria-describedby={`trailer-preview-${trailer.id}`}
       >
         <VisuallyHidden>
@@ -107,14 +171,15 @@ export function QuickPreview({ trailer, open, onOpenChange }: QuickPreviewProps)
               animate={prefersReducedMotion ? {} : { opacity: 1, scale: 1 }}
               exit={prefersReducedMotion ? {} : { opacity: 0, scale: 0.95 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }}
-              className="relative"
+              className="relative pb-[env(safe-area-inset-bottom)] transition-transform will-change-transform"
+            style={swipeOffset ? { transform: `translateY(${swipeOffset}px)` } : undefined}
             >
               {/* Close button */}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => onOpenChange(false)}
-                className="absolute top-4 right-4 z-10 bg-black/50 text-white hover:bg-black/70 rounded-full backdrop-blur-sm"
+                className="absolute right-4 top-[calc(env(safe-area-inset-top)+1rem)] z-10 bg-black/50 text-white hover:bg-black/70 rounded-full backdrop-blur-sm"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -123,7 +188,7 @@ export function QuickPreview({ trailer, open, onOpenChange }: QuickPreviewProps)
               <div className="relative w-full bg-black rounded-t-2xl overflow-hidden video-player-container" style={{ aspectRatio: '16/9' }}>
                 {isPlayerReady && (
                     <iframe
-                      src={`https://iframe.videodelivery.net/${trailer.cf_video_uid}?autoplay=false&muted=true&controls=true&responsive=true&preload=metadata&quality=auto&primaryColor=3b82f6&letterboxColor=000000&defaultTextTrack=off&speed=1&enablePictureInPicture=true&enableKeyboardShortcuts=true&playsinline=true&v=${Date.now()}`}
+                      src={`https://iframe.videodelivery.net/${trailer.cf_video_uid}?autoplay=false&muted=true&controls=true&responsive=true&preload=metadata&quality=auto&primaryColor=3b82f6&letterboxColor=000000&defaultTextTrack=off&speed=1&enablePictureInPicture=true&enableKeyboardShortcuts=true&playsinline=true&poster=${encodeURIComponent(`https://videodelivery.net/${trailer.cf_video_uid}/thumbnails/thumbnail.jpg?time=0.005s&width=800&height=450&quality=75&fit=crop&format=webp`)}`}
                     title="Video Player"
                     className="absolute inset-0 w-full h-full border-0 rounded-none"
                     allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen; webkit-playsinline"

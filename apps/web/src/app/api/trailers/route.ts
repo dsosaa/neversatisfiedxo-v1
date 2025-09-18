@@ -97,13 +97,17 @@ function parseLength(lengthStr: string): number {
 // Load trailer data from CSV
 function loadTrailerData(): TrailerData[] {
   try {
-    // Try multiple possible paths for the CSV file
+    // Try multiple possible paths for the CSV file (env first)
+    const envPath = process.env.VIDEO_DB_PATH
     const possiblePaths = [
+      envPath || '',
+      path.join('/app/data/VideoDB.csv'),
+      path.join('/opt/neversatisfiedxo/data/VideoDB.csv'),
       path.join(process.cwd(), '../../data/VideoDB.csv'),
       path.join(process.cwd(), '../../../data/VideoDB.csv'),
       path.join(process.cwd(), 'data/VideoDB.csv'),
       path.join(__dirname, '../../../../data/VideoDB.csv'),
-    ]
+    ].filter(Boolean)
     
     let csvPath: string | null = null
     let csvContent: string | null = null
@@ -201,6 +205,20 @@ function loadTrailerData(): TrailerData[] {
   }
 }
 
+// Cache parsed CSV in-memory to avoid repeated disk I/O and parsing
+let CSV_CACHE: { data: TrailerData[]; timestamp: number } | null = null
+const CSV_TTL = 5 * 60 * 1000 // 5 minutes
+
+function loadTrailerDataCached(): TrailerData[] {
+  const now = Date.now()
+  if (CSV_CACHE && now - CSV_CACHE.timestamp < CSV_TTL) {
+    return CSV_CACHE.data
+  }
+  const data = loadTrailerData()
+  CSV_CACHE = { data, timestamp: now }
+  return data
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -232,7 +250,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1', 10)
     const pageSize = parseInt(searchParams.get('page_size') || '200', 10) // Increased default to show all videos
     
-    let trailers = loadTrailerData()
+    let trailers = loadTrailerDataCached()
     
     // Apply filters
     if (cfVideoUid) {

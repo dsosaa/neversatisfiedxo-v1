@@ -66,13 +66,17 @@ function parseLength(lengthStr: string): number {
 // Load trailer data from CSV
 function loadTrailerData(): TrailerData[] {
   try {
-    // Try multiple possible paths for the CSV file
+    // Try multiple possible paths for the CSV file (env first)
+    const envPath = process.env.VIDEO_DB_PATH
     const possiblePaths = [
+      envPath || '',
+      path.join('/app/data/VideoDB.csv'),
+      path.join('/opt/neversatisfiedxo/data/VideoDB.csv'),
       path.join(process.cwd(), '../../data/VideoDB.csv'),
       path.join(process.cwd(), '../../../data/VideoDB.csv'),
       path.join(process.cwd(), 'data/VideoDB.csv'),
       path.join(__dirname, '../../../../data/VideoDB.csv'),
-    ]
+    ].filter(Boolean)
     
     let csvPath: string | null = null
     let csvContent: string | null = null
@@ -145,6 +149,18 @@ function loadTrailerData(): TrailerData[] {
   }
 }
 
+// Simple CSV cache to avoid repeated parsing on hot path
+let CSV_CACHE: { data: TrailerData[]; ts: number } | null = null
+const CSV_TTL = 5 * 60 * 1000
+
+function loadTrailerDataCached(): TrailerData[] {
+  const now = Date.now()
+  if (CSV_CACHE && now - CSV_CACHE.ts < CSV_TTL) return CSV_CACHE.data
+  const data = loadTrailerData()
+  CSV_CACHE = { data, ts: now }
+  return data
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: { id: string } }
@@ -159,7 +175,7 @@ export async function GET(
       )
     }
     
-    const trailers = loadTrailerData()
+    const trailers = loadTrailerDataCached()
     // Try to find trailer by multiple identifiers:
     // 1. Direct video UID match (e.g., "ee65f7035c7445388bc1237d3d51cddd")
     // 2. Video number match (e.g., "4" should match video_number 4)

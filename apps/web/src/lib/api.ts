@@ -1,4 +1,4 @@
-import type { Trailer, ApiResponse, TrailerFilters, AuthResponse } from './types'
+import type { Trailer, ApiResponse, TrailerFilters } from './types'
 
 const BASE_URL = process.env.MEDIACMS_BASE_URL || 'http://localhost:8000'
 
@@ -9,24 +9,7 @@ class ApiClient {
   }
 
 
-  // Auth endpoints - Use frontend API (localhost:3000), not MediaCMS backend
-  async verifyPassword(accessCode: string): Promise<AuthResponse> {
-    const frontendBaseURL = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
-    
-    const response = await fetch(`${frontendBaseURL}/api/auth/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ accessCode }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    return response.json()
-  }
+  // Removed complex authentication methods - now using simple auth
 
   // Trailer endpoints - Use frontend API (localhost:3000), not MediaCMS backend
   async getTrailers(filters: TrailerFilters = {}): Promise<ApiResponse<Trailer>> {
@@ -116,8 +99,10 @@ class ApiClient {
   }
 
   // Search trailers
-  async searchTrailers(query: string): Promise<ApiResponse<Trailer>> {
-    return this.getTrailers({ search: query })
+  async searchTrailers(query: string, ordering?: string): Promise<ApiResponse<Trailer>> {
+    const filters: TrailerFilters = { search: query }
+    if (ordering) filters.ordering = ordering
+    return this.getTrailers(filters)
   }
 
   // Get related trailers (same creator or similar content)

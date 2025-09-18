@@ -22,16 +22,6 @@ const nextConfig: NextConfig = {
         ]
       },
       {
-        // API routes - no caching
-        source: '/api/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'private, no-cache, no-store, must-revalidate'
-          }
-        ]
-      },
-      {
         // All other routes - balanced security headers
         source: '/(.*)',
         headers: [
@@ -376,7 +366,15 @@ const nextConfig: NextConfig = {
     CUSTOM_BUILD_ID: process.env.NODE_ENV === 'production' ? 'production' : 'development',
     // Ensure Cloudflare variables are available at build time
     NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE: process.env.NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE,
-  }
+  },
+
+  // Strip console statements in production bundles (keep error/warn)
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false
+  },
+
+  // Do not emit client-side source maps in production to reduce bundle size and leakage
+  productionBrowserSourceMaps: false
 };
 
 export default withBundleAnalyzer(nextConfig);

@@ -1,4 +1,5 @@
 import { GalleryProvider } from '@/components/gallery-provider'
+// Removed unused PreloadResources component
 import { type Trailer } from '@/lib/types'
 import { getVideoUID, hasVideoMapping } from '@/lib/video-mapping'
 import { Badge } from '@/components/ui/badge'
@@ -10,16 +11,18 @@ import Papa from 'papaparse'
 // Server-side direct data loading (avoiding network calls during SSR)
 function loadTrailerDataDirect() {
   try {
-    // Try multiple possible paths for the CSV file
+    // Try multiple possible paths for the CSV file (env first, then common fallbacks)
+    const envPath = process.env.VIDEO_DB_PATH
     const possiblePaths = [
-      path.join(process.cwd(), '../../data/VideoDB.csv'),
-      path.join(process.cwd(), '../../../data/VideoDB.csv'),
-      path.join(process.cwd(), 'data/VideoDB.csv'),
-      path.join(__dirname, '../../../../data/VideoDB.csv'),
+      envPath || '',
+      path.resolve(process.cwd(), '../../data/VideoDB.csv'),
+      path.resolve(process.cwd(), '../../../data/VideoDB.csv'),
+      path.resolve(process.cwd(), '../../../../data/VideoDB.csv'),
+      path.resolve(process.cwd(), 'data/VideoDB.csv'),
+      path.resolve(__dirname, '../../../../data/VideoDB.csv'),
       '/opt/neversatisfiedxo/data/VideoDB.csv',
       '/app/data/VideoDB.csv',
-      path.join(process.cwd(), 'data/VideoDB.csv'),
-    ]
+    ].filter(Boolean)
     
     let csvPath: string | null = null
     let csvContent: string | null = null
@@ -37,7 +40,7 @@ function loadTrailerDataDirect() {
     }
     
     if (!csvContent || !csvPath) {
-      console.error('CSV file not found during SSR')
+      console.error('CSV file not found during SSR - checked paths:', possiblePaths)
       return {
         count: 0,
         next: undefined,
@@ -156,6 +159,7 @@ async function getInitialTrailers() {
 }
 
 function calculateLatestVideoNumber(trailers: Array<{ video_number?: number }>) {
+  if (!trailers || trailers.length === 0) return 0
   return Math.max(...trailers.map(trailer => trailer.video_number || 0))
 }
 
@@ -165,10 +169,10 @@ export default async function GalleryPage() {
   const latestVideoNumber = calculateLatestVideoNumber(initialData.results)
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
-      {/* Static Server-Rendered Header */}
+        <div className="min-h-screen bg-background overflow-x-hidden">
+          {/* Static Server-Rendered Header */}
       <header className="border-b border-border backdrop-blur-sm bg-background/80 sticky top-0 z-40">
-        <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20 py-4">
+        <div className="w-full max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-20 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Image
@@ -176,7 +180,7 @@ export default async function GalleryPage() {
                 alt="neversatisfiedxo"
                 width={200}
                 height={50}
-                className="h-8 md:h-9 w-auto font-semibold"
+                className="h-7 sm:h-8 md:h-9 w-auto font-semibold"
                 priority
               />
             </div>

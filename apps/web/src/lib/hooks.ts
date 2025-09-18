@@ -1,8 +1,8 @@
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './api'
-import type { Trailer, TrailerFilters, AuthResponse } from './types'
+import type { Trailer, TrailerFilters } from './types'
 
 // Query keys
 export const queryKeys = {
@@ -12,21 +12,7 @@ export const queryKeys = {
   relatedTrailers: (trailerId: string) => ['trailers', 'related', trailerId] as const,
 }
 
-// Auth hooks
-export const useVerifyPassword = () => {
-  return useMutation({
-    mutationFn: (password: string) => apiClient.verifyPassword(password),
-    onSuccess: (data: AuthResponse) => {
-      if (data.success) {
-        // Password verification successful - cookie should be set by the API
-        console.log('Authentication successful')
-      }
-    },
-    onError: (error) => {
-      console.error('Authentication failed:', error)
-    },
-  })
-}
+// Removed complex authentication hooks - now using simple auth
 
 // Trailer hooks
 export const useTrailers = (filters: TrailerFilters = {}, options: { enabled?: boolean } = {}) => {
@@ -59,10 +45,10 @@ export const useTrailer = (id: string) => {
   })
 }
 
-export const useSearchTrailers = (query: string, enabled: boolean = true) => {
+export const useSearchTrailers = (query: string, enabled: boolean = true, ordering?: string) => {
   return useQuery({
-    queryKey: ['trailers', 'search', query],
-    queryFn: () => apiClient.searchTrailers(query),
+    queryKey: ['trailers', 'search', query, ordering || ''],
+    queryFn: () => apiClient.searchTrailers(query, ordering),
     enabled: enabled && query.length > 2,
     staleTime: 5 * 60 * 1000, // 5 minutes (increased for search results)
     gcTime: 15 * 60 * 1000, // 15 minutes (increased for search results)
