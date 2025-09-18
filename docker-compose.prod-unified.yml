@@ -1,6 +1,7 @@
 # Unified Docker Compose Configuration for V0 Trailer Site
+# v2.6.3 - Premium Visual Experience & Performance Optimization with Duration Badges
 # This configuration consolidates all services into a single, working setup
-# Usage: docker compose -f docker-compose.unified.yml up -d
+# Usage: docker compose -f docker-compose.prod-unified.yml up -d
 
 
 services:

@@ -2,6 +2,11 @@
 # v2.6.3 - Premium Visual Experience & Performance Optimization
 # Features: 4K video support, high-quality posters, blue scrollbar theme, advanced image loading, duration badges
 # For TypeScript changes, rebuild containers: docker compose build web --no-cache
+# 
+# New in v2.6.3:
+# - Duration badges with clock icons on trailer cards
+# - Simplified homepage with direct redirect to authentication
+# - Enhanced trailer card components with better visual hierarchy
 
 services:
   # Next.js Frontend Application

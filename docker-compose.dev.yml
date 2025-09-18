@@ -1,4 +1,5 @@
 # Development Docker Compose configuration for faster development
+# v2.6.3 - Premium Visual Experience & Performance Optimization with Duration Badges
 # Usage: make dev OR docker compose -f docker-compose.dev.yml up
 # For production: make deploy OR docker compose --profile production up
 

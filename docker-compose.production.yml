@@ -1,6 +1,6 @@
 # Production Docker Compose configuration
-# v2.6.2 - Premium Visual Experience & Performance Optimization
-# Features: 4K video support, high-quality posters, blue scrollbar theme, advanced image loading
+# v2.6.3 - Premium Visual Experience & Performance Optimization
+# Features: 4K video support, high-quality posters, blue scrollbar theme, advanced image loading, duration badges
 # Usage: docker compose -f docker-compose.production.yml up -d --build
 
 services:
