@@ -1,0 +1,200 @@
+# Docker Compose configuration - version removed for modern Docker Compose
+# v2.6.3 - Premium Visual Experience & Performance Optimization
+# Features: 4K video support, high-quality posters, blue scrollbar theme, advanced image loading, duration badges
+# For TypeScript changes, rebuild containers: docker compose build web --no-cache
+
+services:
+  # Next.js Frontend Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+      # BuildKit cache optimization (disabled for local builds)
+      # cache_from:
+        # - v0_trailer_web:cache
+      # Parallel build arguments
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+        NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE: ${NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}
+        NEXT_PUBLIC_SITE_NAME: ${NEXT_PUBLIC_SITE_NAME:-neversatisfiedxo}
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-https://videos.neversatisfiedxo.com}
+    container_name: v0_trailer_web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Core application settings
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      
+      # Required environment variables
+      - NEXT_PUBLIC_SITE_NAME=${NEXT_PUBLIC_SITE_NAME:-neversatisfiedxo}
+      - NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE=${NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}
+      - GATE_PASSWORD=${GATE_PASSWORD}
+      - MEDIACMS_BASE_URL=${MEDIACMS_BASE_URL:-http://mediacms:80}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-https://videos.neversatisfiedxo.com}
+      
+      # Optional environment variables
+      - MEDIACMS_API_TOKEN=${MEDIACMS_API_TOKEN}
+      - CF_ACCOUNT_ID=${CF_ACCOUNT_ID}
+      - CF_STREAM_API_TOKEN=${CF_STREAM_API_TOKEN}
+      - NEXT_PUBLIC_GA_ID=${NEXT_PUBLIC_GA_ID}
+      - NEXT_PUBLIC_HOTJAR_ID=${NEXT_PUBLIC_HOTJAR_ID}
+      - NEXT_PUBLIC_DEBUG=${NEXT_PUBLIC_DEBUG:-false}
+      
+      # Authentication secrets
+      - JWT_SECRET=${JWT_SECRET}
+      
+      # Monitoring and performance
+      - MONITORING_WEBHOOK_URL=${MONITORING_WEBHOOK_URL}
+      
+      # Redis configuration for production rate limiting
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+    volumes:
+      - web_data:/app/.next/cache
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mediacms:
+        condition: service_healthy
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+  # MediaCMS Backend (Django)
+  mediacms:
+    build:
+      context: .
+      dockerfile: Dockerfile.mediacms-ultra
+    platform: linux/amd64  # Force x86_64 platform for compatibility
+    container_name: v0_trailer_mediacms
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mediacms}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-mediacms}
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - ALLOWED_HOSTS=localhost,mediacms,videos.neversatisfiedxo.com,www.videos.neversatisfiedxo.com,web,${DOMAIN_NAME:-localhost}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://videos.neversatisfiedxo.com,https://www.videos.neversatisfiedxo.com,http://localhost:3000,http://web:3000}
+      - DEBUG=${DJANGO_DEBUG:-False}
+      # Performance optimizations
+      - CELERY_TASK_ALWAYS_EAGER=False
+      - EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+      - LOGGING_LEVEL=INFO
+    volumes:
+      - mediacms_data:/home/mediacms.io/mediacms/media_files
+      - mediacms_logs:/home/mediacms.io/mediacms/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: v0_trailer_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mediacms}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-mediacms}
+      # - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256  # Commented out to avoid authentication method conflicts
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mediacms} -d ${POSTGRES_DB:-mediacms}"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: v0_trailer_redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+  # Nginx Reverse Proxy (Optional for production)
+  nginx:
+    image: nginx:alpine
+    container_name: v0_trailer_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./config/nginx-dev.conf/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      web:
+        condition: service_healthy
+      mediacms:
+        condition: service_healthy
+    networks:
+      - v0_trailer_network
+    profiles:
+      - production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/nginx-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# Persistent volumes
+volumes:
+  web_data:
+    driver: local
+  mediacms_data:
+    driver: local
+  mediacms_logs:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nginx_logs:
+    driver: local
+
+# Networks
+networks:
+  v0_trailer_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

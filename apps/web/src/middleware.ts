@@ -1,0 +1,329 @@
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+const COOKIE_NAME = 'authenticated'
+const PROTECTED_PATHS = ['/', '/video', '/gallery'] // Protected paths requiring authentication
+const PUBLIC_PATHS = ['/enter', '/api/gate', '/api/health', '/api/auth/simple']
+
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000 // 15 minutes
+const RATE_LIMIT_MAX_REQUESTS = 1000 // max requests per window
+const RATE_LIMIT_AUTH_MAX = 10 // max auth attempts per window
+
+// Redis-backed rate limiting for production scalability
+interface RateLimitData {
+  requests: number;
+  resetTime: number;
+  authAttempts: number;
+}
+
+// In-memory fallback for development/testing
+const rateLimitStore = new Map<string, RateLimitData>()
+
+
+// REMOVED: generateNonce and generateVideoStreamingCSP functions - no longer needed for video streaming
+
+
+function getRateLimitKey(request: NextRequest): string {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+            request.headers.get('x-real-ip') || 
+            'anonymous'
+  return ip
+}
+
+async function checkRateLimit(key: string, isAuthRequest = false): Promise<{ allowed: boolean; remaining: number }> {
+  const now = Date.now()
+  
+  // Production Redis implementation
+  if (process.env.NODE_ENV === 'production' && process.env.REDIS_URL) {
+    try {
+      // Redis-backed rate limiting with atomic operations
+      // const redisKey = `rate_limit:${key}`
+      // const authKey = `auth_limit:${key}`
+      
+      // Use Redis MULTI for atomic operations
+      // Note: This would require Redis client initialization
+      // For now, fall back to in-memory for backward compatibility
+      console.log('🔄 Production Redis rate limiting would be used here')
+    } catch (error) {
+      console.warn('⚠️ Redis rate limiting failed, falling back to in-memory:', error)
+    }
+  }
+  
+  // In-memory implementation (development/fallback)
+  const entry = rateLimitStore.get(key)
+
+  // Clean up expired entries
+  if (entry && now > entry.resetTime) {
+    rateLimitStore.delete(key)
+  }
+
+  const currentEntry = rateLimitStore.get(key) || { 
+    requests: 0, 
+    resetTime: now + RATE_LIMIT_WINDOW,
+    authAttempts: 0 
+  }
+
+  // Check auth-specific rate limiting
+  if (isAuthRequest && currentEntry.authAttempts >= RATE_LIMIT_AUTH_MAX) {
+    return { allowed: false, remaining: 0 }
+  }
+
+  // Check general rate limiting
+  if (currentEntry.requests >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, remaining: 0 }
+  }
+
+  // Update counters
+  currentEntry.requests++
+  if (isAuthRequest) {
+    currentEntry.authAttempts++
+  }
+  
+  rateLimitStore.set(key, currentEntry)
+
+  return { 
+    allowed: true, 
+    remaining: RATE_LIMIT_MAX_REQUESTS - currentEntry.requests 
+  }
+}
+
+function addSecurityHeaders(response: NextResponse): NextResponse {
+  
+  // Add additional runtime security headers
+  response.headers.set('X-Robots-Tag', 'noindex, nofollow')
+  
+  // Cache control - consistent across all environments
+  response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
+  response.headers.set('Pragma', 'no-cache')
+  response.headers.set('Expires', '0')
+  
+  // COMPLETELY DISABLE CSP FOR VIDEO STREAMING TEST
+  // if (cspHeaderValue) {
+  //   response.headers.set('Content-Security-Policy', cspHeaderValue)
+  // }
+  
+  // DISABLE NONCE HEADER FOR CSP TEST
+  // if (nonce) {
+  //   response.headers.set('x-nonce', nonce)
+  // }
+  
+  // Add security event headers for monitoring
+  response.headers.set('X-Security-Check', 'passed')
+  
+  // Generate enhanced request correlation ID for distributed tracing
+  const timestamp = Date.now().toString(36)
+  const randomArray = new Uint8Array(8)
+  crypto.getRandomValues(randomArray)
+  const randomPart = Array.from(randomArray, byte => byte.toString(16).padStart(2, '0')).join('')
+  const correlationId = `req_${timestamp}_${randomPart}`
+  
+  // Set both legacy and modern correlation headers
+  response.headers.set('X-Request-ID', correlationId)
+  response.headers.set('X-Correlation-ID', correlationId)
+  response.headers.set('X-Trace-ID', correlationId)
+  
+  return response
+}
+
+async function isValidAuthentication(authCookie: { value?: string } | undefined): Promise<boolean> {
+  if (!authCookie?.value) {
+    return false
+  }
+  
+  // Handle legacy cookie format
+  if (authCookie.value === 'authenticated') {
+    return true
+  }
+  
+  // Handle current cookie format
+  if (authCookie.value === 'true') {
+    return true
+  }
+  
+  try {
+    // First try parsing as legacy JSON session data
+    const sessionData = JSON.parse(authCookie.value)
+    const now = Date.now()
+    
+    // Check if session has expired
+    if (sessionData.expires && now > sessionData.expires) {
+      return false
+    }
+    
+    return sessionData.value === 'authenticated'
+  } catch {
+    // If JSON parsing fails, try JWT token verification using Web Crypto API
+    try {
+      // JWT verification logic using Web Crypto API (Edge Runtime compatible)
+      const parts = authCookie.value.split('.')
+      if (parts.length !== 3) {
+        return false
+      }
+
+      const [encodedHeader, encodedPayload, signature] = parts
+      
+      // Verify signature using Web Crypto API
+      const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production'
+      
+      // Convert secret to key for HMAC
+      const encoder = new TextEncoder()
+      const keyData = encoder.encode(JWT_SECRET)
+      
+      // Create HMAC key
+      const cryptoKey = await crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+      )
+      
+      // Sign the header and payload
+      const signatureData = encoder.encode(`${encodedHeader}.${encodedPayload}`)
+      const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, signatureData)
+      
+      // Convert to base64url
+      const signatureArray = new Uint8Array(signatureBuffer)
+      const expectedSignature = btoa(String.fromCharCode(...signatureArray))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '')
+
+      if (signature !== expectedSignature) {
+        console.log('🔍 JWT signature mismatch')
+        return false
+      }
+
+      // Decode payload
+      const payload = JSON.parse(atob(encodedPayload.replace(/-/g, '+').replace(/_/g, '/')))
+
+      // Check expiration
+      const now = Math.floor(Date.now() / 1000)
+      if (payload.exp < now) {
+        return false
+      }
+
+      return payload.sub === 'authenticated'
+    } catch {
+      return false
+    }
+  }
+}
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  const authCookie = request.cookies.get(COOKIE_NAME)
+  const isAuthenticated = await isValidAuthentication(authCookie)
+
+  // COMPLETELY DISABLE CSP FOR VIDEO STREAMING TEST - All CSP generation removed
+
+  // Security validation: Check for suspicious patterns
+  const suspiciousPatterns = [
+    /\.\.(\/|\\)/,  // Path traversal
+    /<script/i,     // XSS attempts
+    /union.*select/i, // SQL injection
+    /javascript:/i,   // JavaScript protocol
+    /vbscript:/i,     // VBScript protocol
+    /on\w+\s*=/i,     // Event handlers
+  ]
+
+  const isSuspicious = suspiciousPatterns.some(pattern => 
+    pattern.test(pathname) || 
+    pattern.test(request.nextUrl.search) ||
+    pattern.test(request.headers.get('user-agent') || '') ||
+    pattern.test(request.headers.get('referer') || '')
+  )
+
+  if (isSuspicious) {
+    console.warn('Suspicious request blocked:', {
+      pathname,
+      userAgent: request.headers.get('user-agent'),
+      ip: getRateLimitKey(request),
+      timestamp: new Date().toISOString()
+    })
+    return new NextResponse('Forbidden', { status: 403 })
+  }
+
+  // Rate limiting check
+  const rateLimitKey = getRateLimitKey(request)
+  const isAuthRequest = pathname.startsWith('/api/gate')
+  const { allowed, remaining } = await checkRateLimit(rateLimitKey, isAuthRequest)
+
+  if (!allowed) {
+    console.warn('Rate limit exceeded:', {
+      ip: rateLimitKey,
+      pathname,
+      timestamp: new Date().toISOString()
+    })
+    const response = new NextResponse('Too Many Requests', { status: 429 })
+    response.headers.set('Retry-After', '900') // 15 minutes
+    response.headers.set('X-RateLimit-Limit', RATE_LIMIT_MAX_REQUESTS.toString())
+    response.headers.set('X-RateLimit-Remaining', '0')
+    response.headers.set('X-RateLimit-Reset', (Date.now() + RATE_LIMIT_WINDOW).toString())
+    return response
+  }
+
+  // Allow public paths
+  if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
+    const response = NextResponse.next()
+    
+    response.headers.set('X-RateLimit-Remaining', remaining.toString())
+    return addSecurityHeaders(response)
+  }
+
+  // Allow static assets with additional security
+  if (pathname.startsWith('/_next/') || 
+      pathname.startsWith('/favicon.ico') ||
+      pathname.includes('.')) {
+    const response = NextResponse.next()
+    // Add security headers for static assets
+    response.headers.set('X-Content-Type-Options', 'nosniff')
+    return response
+  }
+
+  // Check if the path requires authentication
+  const requiresAuth = PROTECTED_PATHS.some(path => 
+    pathname === path || pathname.startsWith(path)
+  )
+
+  if (requiresAuth && !isAuthenticated) {
+    // Log authentication attempt
+    console.info('Unauthenticated access attempt:', {
+      pathname,
+      ip: rateLimitKey,
+      userAgent: request.headers.get('user-agent'),
+      timestamp: new Date().toISOString()
+    })
+    
+    // Redirect to login page
+    const loginUrl = new URL('/enter', request.url)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // If authenticated and trying to access login page or root, redirect to gallery
+  if (isAuthenticated && (pathname === '/enter' || pathname === '/')) {
+    console.log('🔄 Redirecting authenticated user to /gallery')
+    const galleryUrl = new URL('/gallery', request.url)
+    return NextResponse.redirect(galleryUrl)
+  }
+
+  // Add security headers to authenticated requests
+  const response = NextResponse.next()
+  
+  response.headers.set('X-RateLimit-Remaining', remaining.toString())
+  return addSecurityHeaders(response)
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
+}

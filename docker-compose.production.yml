@@ -1,0 +1,185 @@
+# Production Docker Compose configuration
+# v2.6.2 - Premium Visual Experience & Performance Optimization
+# Features: 4K video support, high-quality posters, blue scrollbar theme, advanced image loading
+# Usage: docker compose -f docker-compose.production.yml up -d --build
+
+services:
+  # Next.js Frontend Application (Production)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+        NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE: ${NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}
+        NEXT_PUBLIC_SITE_NAME: ${NEXT_PUBLIC_SITE_NAME:-neversatisfiedxo}
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-https://videos.neversatisfiedxo.com}
+    container_name: v0_trailer_web_prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Production environment
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      
+      # Required environment variables - validated at runtime
+      - NEXT_PUBLIC_SITE_NAME=${NEXT_PUBLIC_SITE_NAME:-neversatisfiedxo}
+      - NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE=${NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}
+      - GATE_PASSWORD=${GATE_PASSWORD}
+      - MEDIACMS_BASE_URL=${MEDIACMS_BASE_URL:-http://mediacms:80}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-https://videos.neversatisfiedxo.com}
+      
+      # Cloudflare Stream configuration
+      - CF_ACCOUNT_ID=${CF_ACCOUNT_ID}
+      - CF_STREAM_API_TOKEN=${CF_STREAM_API_TOKEN}
+      - CF_GLOBAL_API_KEY=${CF_GLOBAL_API_KEY}
+      
+      # Authentication secrets
+      - JWT_SECRET=${JWT_SECRET}
+      
+      # Optional environment variables
+      - MEDIACMS_API_TOKEN=${MEDIACMS_API_TOKEN}
+      - CF_ACCOUNT_ID=${CF_ACCOUNT_ID}
+      - CF_STREAM_API_TOKEN=${CF_STREAM_API_TOKEN}
+      - NEXT_PUBLIC_GA_ID=${NEXT_PUBLIC_GA_ID}
+      - NEXT_PUBLIC_HOTJAR_ID=${NEXT_PUBLIC_HOTJAR_ID}
+      
+      # Redis configuration for rate limiting
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      
+    volumes:
+      - web_data:/app/.next/cache
+      - ./data:/app/data:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mediacms:
+        condition: service_healthy
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # MediaCMS Backend (Production)
+  mediacms:
+    image: mediacms/mediacms:latest
+    platform: linux/amd64
+    container_name: v0_trailer_mediacms_prod
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mediacms}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-mediacms}
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - ALLOWED_HOSTS=localhost,mediacms,videos.neversatisfiedxo.com,www.videos.neversatisfiedxo.com,web,${DOMAIN_NAME:-videos.neversatisfiedxo.com}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://videos.neversatisfiedxo.com,https://www.videos.neversatisfiedxo.com}
+      - DEBUG=${DJANGO_DEBUG:-False}
+    volumes:
+      - mediacms_data:/home/mediacms.io/mediacms/media_files
+      - mediacms_logs:/home/mediacms.io/mediacms/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  # PostgreSQL Database (Production)
+  postgres:
+    image: postgres:16-alpine
+    container_name: v0_trailer_postgres_prod
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mediacms}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-mediacms}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mediacms} -d ${POSTGRES_DB:-mediacms}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    # Production PostgreSQL optimization
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c effective_cache_size=2GB
+      -c maintenance_work_mem=128MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=32MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=16MB
+      -c max_connections=200
+
+  # Redis Cache (Production)
+  redis:
+    image: redis:7-alpine
+    container_name: v0_trailer_redis_prod
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --appendonly yes
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --save 300 10
+      --tcp-keepalive 60
+      --timeout 0
+    volumes:
+      - redis_data:/data
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+# Production volumes
+volumes:
+  web_data:
+    driver: local
+  mediacms_data:
+    driver: local
+  mediacms_logs:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# Networks
+networks:
+  v0_trailer_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

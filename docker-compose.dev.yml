@@ -1,0 +1,192 @@
+# Development Docker Compose configuration for faster development
+# Usage: make dev OR docker compose -f docker-compose.dev.yml up
+# For production: make deploy OR docker compose --profile production up
+
+services:
+  # Next.js Frontend Application (Development Mode)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+        NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE: ${NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}
+        NEXT_PUBLIC_SITE_NAME: ${NEXT_PUBLIC_SITE_NAME:-neversatisfiedxo}
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+    container_name: v0_trailer_web_dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Development environment
+      - NODE_ENV=development
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      
+      # Required environment variables
+      - NEXT_PUBLIC_SITE_NAME=${NEXT_PUBLIC_SITE_NAME:-neversatisfiedxo}
+      - NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE=${NEXT_PUBLIC_CF_STREAM_CUSTOMER_CODE}
+      - GATE_PASSWORD=${GATE_PASSWORD}
+      - MEDIACMS_BASE_URL=${MEDIACMS_BASE_URL:-http://mediacms:80}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+      
+      # Development optimizations
+      - NEXT_PUBLIC_DEBUG=true
+      - FAST_REFRESH=true
+      - WATCHPACK_POLLING=true
+      
+      # Optional environment variables
+      - MEDIACMS_API_TOKEN=${MEDIACMS_API_TOKEN}
+      - CF_ACCOUNT_ID=${CF_ACCOUNT_ID}
+      - CF_STREAM_API_TOKEN=${CF_STREAM_API_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+      
+    volumes:
+      # Bind mount for live code reloading
+      - ./apps/web:/app/web:cached
+      - ./data:/app/data:ro
+      # Named volumes for better performance
+      - web_node_modules:/app/web/node_modules
+      - web_next_cache:/app/web/.next
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mediacms:
+        condition: service_healthy
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Development resource limits removed for compatibility
+
+  # MediaCMS Backend (optimized startup)
+  mediacms:
+    image: mediacms/mediacms:latest
+    platform: linux/amd64
+    container_name: v0_trailer_mediacms_dev
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mediacms}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-mediacms}
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - ALLOWED_HOSTS=localhost,mediacms,videos.neversatisfiedxo.com,www.videos.neversatisfiedxo.com,web,${DOMAIN_NAME:-localhost}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://web:3000}
+      - DEBUG=${DJANGO_DEBUG:-True}  # Enable debug in development
+      
+      # Performance optimizations for development
+      - CELERY_TASK_ALWAYS_EAGER=True  # Run tasks synchronously for faster startup
+      - CELERY_TASK_EAGER_PROPAGATES=True
+      - EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+      - LOGGING_LEVEL=WARNING  # Reduce logging overhead
+      - SKIP_DB_INIT=${SKIP_DB_INIT:-false}  # Set to true after first run
+    volumes:
+      - mediacms_data:/home/mediacms.io/mediacms/media_files
+      - mediacms_logs:/home/mediacms.io/mediacms/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    # Resource limits removed for compatibility
+
+  # PostgreSQL Database (optimized for development)
+  postgres:
+    image: postgres:15-alpine
+    container_name: v0_trailer_postgres_dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-mediacms}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-mediacms}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Development: add initialization scripts if needed
+      # - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mediacms} -d ${POSTGRES_DB:-mediacms}"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+    # PostgreSQL performance tuning for development
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+
+  # Redis Cache (optimized)
+  redis:
+    image: redis:7-alpine
+    container_name: v0_trailer_redis_dev
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+    volumes:
+      - redis_data:/data
+    networks:
+      - v0_trailer_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+# Development-optimized volumes
+volumes:
+  web_node_modules:
+    driver: local
+  web_next_cache:
+    driver: local
+  web_next_server:
+    driver: local
+  mediacms_data:
+    driver: local
+  mediacms_logs:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# Networks
+networks:
+  v0_trailer_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

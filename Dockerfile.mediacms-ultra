@@ -1,0 +1,48 @@
+# MediaCMS Ultra Dockerfile for Development
+# Based on the official MediaCMS image with additional tools for development
+# Includes wget, curl, and other utilities for healthchecks and debugging
+
+FROM mediacms/mediacms:latest
+
+# Switch to root to install additional packages
+USER root
+
+# Install additional development and debugging tools
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    htop \
+    nano \
+    git \
+    python3-pip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages for enhanced functionality
+RUN pip3 install --no-cache-dir \
+    requests \
+    python-dotenv
+
+# Create development scripts directory
+RUN mkdir -p /opt/scripts
+
+# Copy development scripts
+COPY scripts/init-mediacms-db.sh /opt/scripts/
+RUN chmod +x /opt/scripts/init-mediacms-db.sh
+
+# Switch back to MediaCMS user
+USER mediacms
+
+# Set working directory
+WORKDIR /home/mediacms.io/mediacms
+
+# Expose port
+EXPOSE 80
+
+# Health check using wget (as configured in docker-compose)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
+
+# Use the default MediaCMS entrypoint
+ENTRYPOINT ["/home/mediacms.io/mediacms/docker-entrypoint.sh"]
+CMD ["/home/mediacms.io/mediacms/start.sh"]

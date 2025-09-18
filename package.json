@@ -1,0 +1,27 @@
+{
+  "name": "v0-trailer",
+  "version": "2.6.3",
+  "description": "neversatisfiedxo Premium Trailer Gallery - High-Performance Video Streaming Platform",
+  "private": true,
+  "dependencies": {
+    "dotenv": "^17.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/neversatisfiedxo/v0-trailer"
+  },
+  "keywords": [
+    "video-streaming",
+    "premium-content",
+    "nextjs",
+    "cloudflare-stream",
+    "docker",
+    "typescript"
+  ],
+  "author": "neversatisfiedxo",
+  "license": "UNLICENSED"
+}

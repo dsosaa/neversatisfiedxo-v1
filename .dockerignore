@@ -1,0 +1,155 @@
+# Build performance optimizations for Docker context
+
+# Dependencies (exclude from context, installed in container)
+**/node_modules
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.pnpm-debug.log*
+
+# Production builds (exclude to prevent conflicts)
+**/.next
+**/out
+**/build
+**/dist
+**/coverage
+**/.turbo
+**/storybook-static
+**/playwright-report
+**/test-results
+
+# Environment files (except essential)
+**/.env*
+!.env
+!**/.env.example
+!**/.env.local.example
+
+# Logs and temporary files
+**/logs
+**/*.log
+**/tmp
+**/temp
+**/.cache
+**/.nyc_output
+
+# IDE and editor files
+**/.vscode
+**/.idea
+**/*.swp
+**/*.swo
+**/*~
+**/.DS_Store
+**/Thumbs.db
+
+# Version control
+**/.git
+**/.gitignore
+**/.gitattributes
+
+# Docker files (prevent recursive copies)
+**/Dockerfile*
+**/docker-compose*
+**/.dockerignore
+
+# Python cache and virtual environments
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+**/env
+**/venv
+**/.venv
+**/pip-log.txt
+
+# MediaCMS specific large files
+**/media_files
+**/static_files
+**/migrations
+**/*.sqlite3
+
+# Testing and CI/CD
+**/junit.xml
+**/.github
+**/.gitlab-ci.yml
+**/azure-pipelines.yml
+
+# Documentation (not needed in container)
+**/README*.md
+**/CHANGELOG*.md
+**/docs
+**/CONTRIBUTING.md
+**/LICENSE*
+
+# Monitoring and analytics
+**/monitoring
+**/analytics
+
+# Large data files (mount as volumes instead)
+**/uploads
+**/downloads
+**/backups
+
+# OS and system files
+**/.DS_Store
+**/Thumbs.db
+**/desktop.ini
+
+# Package manager cache
+**/.npm
+**/.yarn
+**/.pnpm-store
+**/yarn-error.log
+**/npm-shrinkwrap.json
+**/package-lock.json.bak
+
+# IDE configurations
+**/.vscode/
+**/.idea/
+**/.vs/
+**/.vscode-test/
+**/.history/
+**/*.code-workspace
+
+# Development and testing files
+**/*.test.*
+**/*.spec.*
+**/__tests__/
+**/__mocks__/
+**/test/
+**/tests/
+**/cypress/
+**/e2e/
+
+# Build and development tools
+**/.eslintcache
+**/.stylelintcache
+**/tsconfig.tsbuildinfo
+**/.tsbuildinfo
+**/webpack-stats.json
+**/bundle-analyzer-report.html
+
+# Environment and secrets
+**/.env.test
+**/.env.development
+**/.env.staging
+**/secrets/
+**/private/
+
+# Performance and monitoring
+**/lighthouse-*.html
+**/coverage/
+**/nyc_output/
+**/prof/
+
+# Platform specific
+**/.DS_Store
+**/Thumbs.db
+**/ehthumbs.db
+**/Desktop.ini
+
+# Container and deployment files
+**/docker-compose.override.yml
+**/docker-compose.local.yml
+**/Dockerfile.dev
+**/.dockerignore.bak

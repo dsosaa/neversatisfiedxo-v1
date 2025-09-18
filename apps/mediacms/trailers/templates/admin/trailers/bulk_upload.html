@@ -1,0 +1,100 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block title %}Bulk Upload CSV{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+    .upload-results {
+        margin-top: 20px;
+    }
+    .result-item {
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 4px;
+    }
+    .result-created { background-color: #d4edda; border: 1px solid #c3e6cb; }
+    .result-updated { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+    .result-error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+    .result-skipped { background-color: #fff3cd; border: 1px solid #ffeaa7; }
+    .result-preview { background-color: #e2e3e5; border: 1px solid #d6d8db; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<h1>Bulk Upload CSV</h1>
+
+<div class="description">
+    <p>Upload a CSV file to bulk import trailer data. The CSV should contain the following columns:</p>
+    <ul>
+        <li><strong>Video Number</strong>: "Video 0", "Video 1", etc.</li>
+        <li><strong>Description</strong>: Video title</li>
+        <li><strong>Video ID</strong>: Cloudflare Stream UID</li>
+        <li><strong>Thumbnail ID</strong>: Cloudflare Stream thumbnail UID</li>
+        <li><strong>Price</strong>: "$20" or "FREE"</li>
+        <li><strong>Length</strong>: "25 Minutes" or "1 Hour 15 Minutes"</li>
+        <li><strong>Creators</strong>: Creator name(s)</li>
+        <li><strong>Upload Status</strong>: Complete, Pending, Processing</li>
+    </ul>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+        {% for field in form %}
+        <div class="form-row">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}
+            <p class="help">{{ field.help_text }}</p>
+            {% endif %}
+            {% if field.errors %}
+            <ul class="errorlist">
+                {% for error in field.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </fieldset>
+    
+    <div class="submit-row">
+        <input type="submit" value="{% if form.dry_run.value %}Preview Import{% else %}Process Import{% endif %}" class="default" />
+        <a href="{% url 'admin:trailers_trailermeta_changelist' %}" class="button cancel-link">Cancel</a>
+    </div>
+</form>
+
+{% if results %}
+<div class="upload-results">
+    <h2>Import Results{% if dry_run %} (Preview){% endif %}</h2>
+    <p><strong>Total processed:</strong> {{ total_processed }}</p>
+    
+    {% for result in results %}
+    <div class="result-item result-{{ result.status }}">
+        <strong>Video {{ result.video_number }}</strong>: {{ result.message }}
+        {% if result.cf_status %}
+        <br><small>Cloudflare Status: {{ result.cf_status }}{% if result.cf_ready %} (Ready){% endif %}{% if result.cf_duration %}, Duration: {{ result.cf_duration }}s{% endif %}</small>
+        {% endif %}
+    </div>
+    {% endfor %}
+    
+    {% if dry_run %}
+    <div style="margin-top: 20px;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+                {% if field.name == 'dry_run' %}
+                <input type="hidden" name="{{ field.name }}" value="false">
+                {% else %}
+                {{ field.as_hidden }}
+                {% endif %}
+            {% endfor %}
+            <input type="submit" value="Execute Import" class="btn btn-success" />
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
