@@ -78,11 +78,11 @@ services:
     networks:
       - v0_trailer_network
     healthcheck:
-      test: ["CMD", "sh", "-c", "curl -f http://localhost/ || exit 0"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/ || curl -f http://localhost/ || exit 1"]
       interval: 30s
-      timeout: 10s
+      timeout: 15s
       retries: 5
-      start_period: 120s
+      start_period: 180s
 
   # Next.js Frontend
   web:
@@ -124,11 +124,11 @@ services:
     networks:
       - v0_trailer_network
     healthcheck:
-      test: ["CMD", "node", "healthcheck.js"]
-      interval: 30s
+      test: ["CMD-SHELL", "node healthcheck.js || curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 20s
       timeout: 10s
-      retries: 3
-      start_period: 60s
+      retries: 5
+      start_period: 90s
 
   # Nginx Reverse Proxy
   nginx:

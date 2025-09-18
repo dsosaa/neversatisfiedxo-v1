@@ -222,22 +222,28 @@ npm run analyze                # Bundle analysis
 - **Features**: Clock icons, formatted time display, bottom-left positioning
 - **Styling**: Dark zinc background with light text, hover effects
 
-#### **2. Modern Filter System**
+#### **2. Docker Health Checks**
+- **Robust Health Checks**: Enhanced health checks with wget/curl fallback options
+- **MediaCMS Reliability**: Improved MediaCMS startup reliability with extended timeouts
+- **Web Service Monitoring**: Enhanced Next.js service health monitoring
+- **Asset Management**: Complete Docker asset inclusion with SSL certificates and logos
+
+#### **3. Modern Filter System**
 - **Component**: `ModernFilterChips`
 - **Features**: Horizontal layout, progressive disclosure, blue theme
 - **State**: Centralized filter management via `GalleryProvider`
 
-#### **3. Optimized Image Loading**
+#### **4. Optimized Image Loading**
 - **Component**: `OptimizedThumbnail`
 - **Features**: 5ms timestamps, WebP format, lazy loading
 - **Performance**: Progressive loading with error handling
 
-#### **4. Authentication Flow**
+#### **5. Authentication Flow**
 - **Page**: `/enter`
 - **Features**: Password protection, auto-redirect, mobile optimization
 - **Security**: Middleware-based route protection
 
-#### **5. Video Streaming**
+#### **6. Video Streaming**
 - **Integration**: Cloudflare Stream
 - **Features**: 4K support, adaptive quality, thumbnail generation
 - **Performance**: Optimized iframe embedding

@@ -17,10 +17,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **5ms Thumbnail Timestamps**: Verified high-quality thumbnail generation
 - **Performance Monitoring**: Advanced image loading with performance tracking
 - **Hydration Error Resolution**: Fixed persistent React hydration mismatches
+- **Robust Health Checks**: Enhanced Docker health check reliability with fallback options
+- **Enhanced Docker Assets**: Complete asset inclusion with SSL certificates and logos
 
 ### 🔧 **Technical Improvements**
 - **Duration Badge Implementation**: Added `EnhancedBadge` component with `duration` variant and clock icons
 - **Homepage Optimization**: Replaced complex server-side rendering with simple redirect for better performance
+- **Health Check Enhancement**: Improved MediaCMS and web service health checks with wget/curl fallback options
+- **Docker Asset Management**: Added SSL certificates, logos, and essential files to Docker containers
+- **Lint Error Resolution**: Fixed duplicate environment variables in Docker Compose files
 - **Code Cleanup**: Removed unused video player components and debug files
 - **TypeScript Optimization**: Fixed all linting errors and type safety issues
 - **API Caching**: In-memory caching for improved response times

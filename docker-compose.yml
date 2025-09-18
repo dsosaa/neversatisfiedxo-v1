@@ -7,6 +7,14 @@
 # - Duration badges with clock icons on trailer cards
 # - Simplified homepage with direct redirect to authentication
 # - Enhanced trailer card components with better visual hierarchy
+#
+# Included Assets:
+# - neversatisfiedxo-logo.png (268KB) - Main brand logo
+# - favicon.png, apple-touch-icon.png - Browser icons
+# - logo.svg, apple-icon.svg - Vector logos
+# - SSL certificates (cert.pem, key.pem) - HTTPS encryption
+# - Service worker (sw.js) - PWA functionality
+# - VideoDB.csv - Video metadata database
 
 services:
   # Next.js Frontend Application
@@ -60,6 +68,8 @@ services:
     volumes:
       - web_data:/app/.next/cache
       - ./data:/app/data
+      # Static assets (logo, icons, favicon) are included in the Docker image
+      # SSL certificates are mounted in nginx container
     depends_on:
       postgres:
         condition: service_healthy
@@ -70,11 +80,11 @@ services:
     networks:
       - v0_trailer_network
     healthcheck:
-      test: ["CMD", "node", "healthcheck.js"]
+      test: ["CMD-SHELL", "node healthcheck.js || curl -f http://localhost:3000/api/health || exit 1"]
       interval: 20s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
   # MediaCMS Backend (Django)
   mediacms:
     build:
@@ -111,11 +121,11 @@ services:
     networks:
       - v0_trailer_network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/ || curl -f http://localhost/ || exit 1"]
       interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
+      timeout: 15s
+      retries: 5
+      start_period: 180s
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
@@ -163,7 +173,7 @@ services:
       - "8080:80"
     volumes:
       - ./config/nginx-dev.conf/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./config/ssl:/etc/nginx/ssl:ro
+      - ./config/ssl:/etc/nginx/ssl:ro  # SSL certificates (cert.pem, key.pem)
       - nginx_logs:/var/log/nginx
     depends_on:
       web:

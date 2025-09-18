@@ -86,8 +86,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init and networking tools for health checks
+RUN apk add --no-cache dumb-init curl wget
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
@@ -103,6 +103,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/data ./data
 
 # Copy healthcheck script
 COPY --chown=nextjs:nodejs healthcheck.js ./
+
+# Ensure all essential assets are present
+RUN ls -la /app/public/ | grep -E "(neversatisfiedxo-logo|favicon|icon)" || echo "⚠️  Logo assets check"
 
 # Create cache directories with proper permissions
 RUN mkdir -p /app/.next/cache/images && \

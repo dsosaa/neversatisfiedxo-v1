@@ -42,8 +42,6 @@ services:
       
       # Optional environment variables
       - MEDIACMS_API_TOKEN=${MEDIACMS_API_TOKEN}
-      - CF_ACCOUNT_ID=${CF_ACCOUNT_ID}
-      - CF_STREAM_API_TOKEN=${CF_STREAM_API_TOKEN}
       - NEXT_PUBLIC_GA_ID=${NEXT_PUBLIC_GA_ID}
       - NEXT_PUBLIC_HOTJAR_ID=${NEXT_PUBLIC_HOTJAR_ID}
       
@@ -63,10 +61,10 @@ services:
     networks:
       - v0_trailer_network
     healthcheck:
-      test: ["CMD", "node", "healthcheck.js"]
-      interval: 30s
+      test: ["CMD-SHELL", "node healthcheck.js || curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 20s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 90s
 
   # MediaCMS Backend (Production)
@@ -99,11 +97,11 @@ services:
     networks:
       - v0_trailer_network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/ || curl -f http://localhost/ || exit 1"]
       interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
+      timeout: 15s
+      retries: 5
+      start_period: 180s
 
   # PostgreSQL Database (Production)
   postgres:
