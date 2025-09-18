@@ -149,11 +149,6 @@ curl -i -X POST http://localhost:3000/api/auth/simple \
 ```
 3) Check cookie presence: DevTools → Application → Cookies → `authenticated=true`.
 4) Clean stale Docker state and rebuild:
-5) Ensure `VIDEO_DB_PATH` is set and readable by the web container/process.
-6) Verify trailers API returns data:
-```bash
-curl http://localhost:3000/api/trailers | jq '.count'
-```
 ```bash
 docker compose -f docker-compose.local-dev.yml down
 docker volume rm v0trailer_web_data_dev v0trailer_postgres_data_dev \
@@ -161,6 +156,16 @@ docker volume rm v0trailer_web_data_dev v0trailer_postgres_data_dev \
 docker image prune -f
 docker compose -f docker-compose.local-dev.yml up --build -d
 ```
+5) Ensure `VIDEO_DB_PATH` is set and readable by the web container/process.
+6) Verify trailers API returns data:
+```bash
+curl http://localhost:3000/api/trailers | jq '.count'
+```
+
+**Players or thumbnails not visible after deploy:**
+- Perform a hard refresh to clear stale markup and SW cache (Cmd/Ctrl+Shift+R).
+- Check browser console for CSP or mixed content errors.
+- Confirm `videodelivery.net` and `imagedelivery.net` are allowed in Next image config.
 
 ## 📊 Monitoring
 

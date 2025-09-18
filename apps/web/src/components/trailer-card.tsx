@@ -127,7 +127,7 @@ export const TrailerCard = memo(function TrailerCard({ trailer, onPreview, highP
       <Card 
         className="h-full flex flex-col overflow-hidden border border-zinc-800/40 hover:border-zinc-600/60 focus-within:border-zinc-500 focus-within:ring-2 focus-within:ring-zinc-500/30 focus-within:ring-offset-2 focus-within:ring-offset-zinc-950 transition-all duration-300 rounded-2xl shadow-xl hover:shadow-2xl bg-gradient-to-br from-zinc-950/95 via-zinc-900/90 to-zinc-950/95 backdrop-blur-md hover:scale-[1.02] group-hover:shadow-sky-500/10"
       >
-        <div className="relative h-0 pt-[56.25%] bg-black rounded-t-2xl overflow-hidden" style={{ contentVisibility: 'auto', containIntrinsicSize: '288px 162px' }}>
+        <div className="relative aspect-[16/9] bg-black rounded-t-2xl overflow-hidden" style={{ contentVisibility: 'auto', containIntrinsicSize: '288px 162px' }}>
           {trailer.cf_video_uid ? (
             <CardThumbnail
               uid={trailer.cf_video_uid}
@@ -257,7 +257,7 @@ export const TrailerCard = memo(function TrailerCard({ trailer, onPreview, highP
 export function TrailerCardSkeleton() {
   return (
     <Card className="overflow-hidden border border-zinc-800/50 rounded-2xl shadow-lg bg-zinc-950/95 backdrop-blur-sm">
-      <div className="relative h-0 pt-[56.25%] bg-muted rounded-t-2xl overflow-hidden">
+      <div className="relative aspect-[16/9] bg-muted rounded-t-2xl overflow-hidden">
         {/* Animated shimmer effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
         

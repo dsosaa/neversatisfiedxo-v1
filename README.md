@@ -249,6 +249,12 @@ docker image prune -f
 docker compose -f docker-compose.local-dev.yml up --build -d
 ```
 
+**Blank players or thumbnails after deploy:**
+- Do a hard refresh to clear stale hydrated markup and service worker cache:
+  - macOS: Cmd+Shift+R; Windows/Linux: Ctrl+Shift+R.
+- Ensure `VIDEO_DB_PATH` is set and readable.
+- Confirm `/api/trailers` returns data and images load from `videodelivery.net`.
+
 **Build failures:**
 - Clear Docker cache: `docker system prune -f`
 - Rebuild containers: `docker compose up --build -d`

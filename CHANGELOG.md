@@ -128,3 +128,11 @@ All notable changes to the V0 Trailer Site project will be documented in this fi
 - Responsive design with Tailwind CSS
 - Basic authentication system
 
+## v2.6.3-working (2025-09-18)
+- Fix: Gallery initially empty due to missing CSV. Added `VIDEO_DB_PATH` and robust fallbacks.
+- Fix: SSR/client mismatch causing hydration warnings; unified thumbnail wrappers to `aspect-[16/9]`.
+- Fix: Uppercase route normalization (`/GALLERY` → `/gallery`) to avoid 404s.
+- Docs: Updated `README.md` and `DEPLOYMENT.md` with CSV path, simple auth, troubleshooting (hard refresh).
+- UI: Enforce 16:9 wrappers for Next/Image fill to eliminate zero-height image warnings.
+- Tags: `v2.6.3-working` and `working` pushed; branch `working-fix` created.
+
